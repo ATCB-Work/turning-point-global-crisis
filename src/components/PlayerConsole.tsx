@@ -1,10 +1,17 @@
 import React, { useState } from 'react';
+import ACTIONS from '../data/actions.json';
 
 interface PlayerConsoleProps {
-    onAction: (actionType: string) => void;
+    onAction: (action: ActionProps) => void;
     onEndTurn: () => void;
     activeLayers: Record<string, boolean>;
     handleLayerToggle: (layer: "cities" | "locations" | "infections") => void;
+}
+
+export interface ActionProps {
+    code: string;
+    label: string;
+    cost: number;
 }
 
 interface ActionButtonProps {
@@ -12,21 +19,6 @@ interface ActionButtonProps {
     icon: string;
     onClick: () => void;
     color: string;
-}
-
-const ACTIONS = {
-    healthcare: [
-        { label: "Aumenta Capacità Ospedaliera", cost: 20 },
-    ],
-    military: [
-        { label: "Blocchi Stradali", cost: 15 },
-    ],
-    research: [
-        { label: "Sviluppa Vaccino", cost: 50 },
-    ],
-    economy: [
-        { label: "Stimolo Economico", cost: 30 },
-    ]
 }
 
 const PlayerConsole: React.FC<PlayerConsoleProps> = ({ onAction, onEndTurn, activeLayers, handleLayerToggle }) => {
@@ -81,13 +73,10 @@ const PlayerConsole: React.FC<PlayerConsoleProps> = ({ onAction, onEndTurn, acti
 
             <div className={`absolute bottom-20 left-6 p-4 rounded-2xl flex flex-col gap-2 border border-slate-700 shadow-2xl transition-all bg-slate-900/80 backdrop-blur-md ${showHealthcareActions ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
                 {
-                    ACTIONS.healthcare.map((action) => (
+                    ACTIONS.healthcare.map((action: ActionProps) => (
                         <button
                             key={action.label}
-                            onClick={() => {
-                                alert("Applicato: " + action.label);
-                                onAction(action.label);
-                            }}
+                            onClick={() => onAction(action)}
                             className={`px-3 py-1 rounded-xl text-sm font-bold bg-cyan-600 text-white cursor-pointer`}
                         >
                             {action.label} - <span className="text-yellow-400 font-bold">{action.cost} PR</span>
@@ -100,10 +89,7 @@ const PlayerConsole: React.FC<PlayerConsoleProps> = ({ onAction, onEndTurn, acti
                     ACTIONS.military.map((action) => (
                         <button
                             key={action.label}
-                            onClick={() => {
-                                alert("Applicato: " + action.label);
-                                onAction(action.label);
-                            }}
+                            onClick={() => onAction(action)}
                             className={`px-3 py-1 rounded-xl text-sm font-bold bg-cyan-600 text-white cursor-pointer`}
                         >
                             {action.label} - <span className="text-yellow-400 font-bold">{action.cost} PR</span>
@@ -116,10 +102,7 @@ const PlayerConsole: React.FC<PlayerConsoleProps> = ({ onAction, onEndTurn, acti
                     ACTIONS.research.map((action) => (
                         <button
                             key={action.label}
-                            onClick={() => {
-                                alert("Applicato: " + action.label);
-                                onAction(action.label);
-                            }}
+                            onClick={() => onAction(action)}
                             className={`px-3 py-1 rounded-xl text-sm font-bold bg-cyan-600 text-white cursor-pointer`}
                         >
                             {action.label} - <span className="text-yellow-400 font-bold">{action.cost} PR</span>
@@ -132,10 +115,7 @@ const PlayerConsole: React.FC<PlayerConsoleProps> = ({ onAction, onEndTurn, acti
                     ACTIONS.economy.map((action) => (
                         <button
                             key={action.label}
-                            onClick={() => {
-                                alert("Applicato: " + action.label);
-                                onAction(action.label);
-                            }}
+                            onClick={() => onAction(action)}
                             className={`px-3 py-1 rounded-xl text-sm font-bold bg-cyan-600 text-white cursor-pointer`}
                         >
                             {action.label} - <span className="text-yellow-400 font-bold">{action.cost} PR</span>

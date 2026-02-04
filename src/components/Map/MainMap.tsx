@@ -6,37 +6,21 @@ import {
   Marker
 } from "react-simple-maps";
 import { WORLD_LOCATIONS } from "../../data/locations";
-import { useEffect, useState } from "react";
-import type { City, Nation } from "../../data/nations";
-
-interface Geography {
-    svgPath: string | undefined;
-    id: string;
-    rsmKey: string;
-    properties: Record<string, unknown>;
-    geometry: unknown;
-}
-interface GeoCity {
-    geometry: {
-        coordinates: [number, number]
-    };
-    properties: {
-        name: string;
-        featurecla: string;
-        scalerank: number;
-    };
-}
+import type { City, MainMapProps } from "../../config/interfaces";
+import { useGeoData } from "../../hooks/useGeoData";
+import { useCitiesData } from "../../hooks/useCitiesData";
+import {
+    CUSTOM_LOCATION_ICONS,
+    CUSTOM_CITIES_ICONS,
+    CUSTOM_CITIES_ICON_COODS,
+    CUSTOM_CITIES_NAME_COORDS
+} from "../../config/constants";
+import { useState } from "react";
+import type { GeoCity, Geography as IGeography } from "../../config/interfaces";
 
 // URL del GeoJSON per i confini mondiali
 const geoUrl = "https://raw.githubusercontent.com/lotusms/world-map-data/main/world.json";
 const citiesUrl = "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_populated_places_simple.geojson";
-
-interface MainMapProps {
-    nations: Record<string, Nation>;
-    selectedNation: Nation | null;
-    activeLayers: Record<string, boolean>;
-    onNationClick: (id: string | null) => void;
-}
 
 function isCapital(city: GeoCity): boolean {
     return city.properties.featurecla.includes('Admin-0 capital');
@@ -45,56 +29,11 @@ function isLargeCity(city: GeoCity): boolean {
     return city.properties.scalerank <= 2;
 }
 
-const CUSTOM_LOCATION_ICONS: Record<string, string> = {
-    'airport': '✈️',
-    'port': '⚓',
-};
-
-const CUSTOM_CITIES_ICONS: Record<string, string> = {
-    'capital': '★',
-    'large': '●',
-    'default': '•',
-};
-
-const CUSTOM_CITIES_ICON_COODS: Record<string, [number, number]> = {
-    'Vatican City': [0, -0.7],
-    'Colombo': [0, -0.5],
-    'Sri Jayawardenepura Kotte': [0.2, 0.2],
-    'Kuala Lumpur': [0, -0.3],
-    'Putrajaya': [0, 0.3],
-};
-
-const CUSTOM_CITIES_NAME_COORDS: Record<string, [number, number]> = {
-    'Vatican City': [0.2, -0.5],
-    'Kingstown': [-6.5, 0],
-    'Basseterre': [0.2, -0.2],
-    'Santo Domingo': [0, -0.4],
-    'Port-au-Prince': [-1.2, 1.5],
-    'Buenos Aires': [0.3, -0.1],
-    'Valparaíso': [0.5, 0.3],
-    'Colombo': [0.5, -0.2],
-    'Sri Jayawardenepura Kotte': [0.6, 1.1],
-    'Kuala Lumpur': [0.5, 0],
-};
-
 export default function MainMap({ nations, selectedNation, activeLayers, onNationClick }: MainMapProps) {
-    
+    const geoData = useGeoData(geoUrl);
+    const cities = useCitiesData(citiesUrl);
+
     const [currentZoom, setCurrentZoom] = useState(1);
-    const [cities, setCities] = useState([]);
-    const [geoData, setGeoData] = useState(null); // Stato per i confini
-
-    // Carichiamo le città al mount del componente
-    useEffect(() => {
-        // Carichiamo i confini del mondo
-        fetch(geoUrl)
-            .then(res => res.json())
-            .then(data => setGeoData(data));
-
-        // Carichiamo le città
-        fetch(citiesUrl)
-            .then(res => res.json())
-            .then(data => setCities(data.features));
-    }, []);
 
     // Se i dati non sono pronti, mostriamo un loader o nulla per evitare il glitch dei marker
     if (!geoData) return <div className="w-full h-full bg-slate-900 animate-pulse" />;
@@ -121,24 +60,6 @@ export default function MainMap({ nations, selectedNation, activeLayers, onNatio
                         <stop offset="0%" stopColor="rgba(239, 68, 68, 0.8)" />
                         <stop offset="100%" stopColor="rgba(239, 68, 68, 0)" />
                     </radialGradient>
-
-                    {/* Generazione dinamica dei ClipPath all'interno del defs */}
-                    {/* <Geographies 
-                        geography={geoData}
-                    >
-                        {({ geographies }: { geographies: Geography[] }) => 
-                            geographies.map((geo) => {
-                                const nationId = geo.id || geo.properties.ISO_A3;
-                                console.log("Generato clipPath per:", nationId, `clip-${geo.id || geo.properties.ISO_A3}`); // <-- Apri la console (F12) e controlla
-                            
-                                return (
-                                    <clipPath id={`clip-${geo.id || geo.properties.ISO_A3}`} key={`clip-${geo.rsmKey}`}>
-                                        <path d={geo.svgPath} />
-                                    </clipPath>
-                                )
-                            }
-                        )}
-                    </Geographies> */}
                 </defs>
 
                 {/* ZoomableGroup permette il drag & zoom */}
@@ -151,12 +72,12 @@ export default function MainMap({ nations, selectedNation, activeLayers, onNatio
                 >
                     {/* LAYER 1. Geografie (Nazioni) */}
                     <Geographies geography={geoUrl}>
-                        {({ geographies, projection }: { geographies: Geography[], projection: (coordinates: [number, number]) => [number, number] }) =>
+                        {({ geographies, projection }: { geographies: IGeography[], projection: (coordinates: [number, number]) => [number, number] }) =>
                         geographies.map((geo) => {
                             const nationId = (geo.id || geo.properties.ISO_A3 || geo.properties.name) as string;
                             const isSelected = selectedNation && selectedNation.id === nationId;
                             const focus = nations[nationId]?.cities.find((c:City) => c.infectionData && c.infectionData.intensity > 0);
-
+                    
                             return (
                                 <g key={geo.rsmKey}>
                                 {/* LAYER 1. La Nazione Base */}

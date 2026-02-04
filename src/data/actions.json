@@ -1,0 +1,30 @@
+{
+    "healthcare": [
+        { 
+            "code": "healthcare_increase_capacity", 
+            "label": "Aumenta Capacità Ospedaliera", 
+            "cost": 20 
+        }
+    ],
+    "military": [
+        { 
+            "code": "military_block_roads", 
+            "label": "Blocchi Stradali", 
+            "cost": 15 
+        }
+    ],
+    "research": [
+        { 
+            "code": "research_develop_vaccine", 
+            "label": "Sviluppa Vaccino", 
+            "cost": 50 
+        }
+    ],
+    "economy": [
+        { 
+            "code": "economy_stimulus", 
+            "label": "Stimolo Economico", 
+            "cost": 30 
+        }
+    ]
+}
