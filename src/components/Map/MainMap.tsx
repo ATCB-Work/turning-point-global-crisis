@@ -7,14 +7,16 @@ import {
 } from "react-simple-maps";
 import { WORLD_LOCATIONS } from "../../data/locations";
 import { useEffect, useState } from "react";
+import type { City, Nation } from "../../data/nations";
 
 interface Geography {
+    svgPath: string | undefined;
     id: string;
     rsmKey: string;
     properties: Record<string, unknown>;
     geometry: unknown;
 }
-interface City {
+interface GeoCity {
     geometry: {
         coordinates: [number, number]
     };
@@ -30,15 +32,16 @@ const geoUrl = "https://raw.githubusercontent.com/lotusms/world-map-data/main/wo
 const citiesUrl = "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_populated_places_simple.geojson";
 
 interface MainMapProps {
-    selectedNation: string | null;
+    nations: Record<string, Nation>;
+    selectedNation: Nation | null;
     activeLayers: Record<string, boolean>;
     onNationClick: (id: string | null) => void;
 }
 
-function isCapital(city: City): boolean {
+function isCapital(city: GeoCity): boolean {
     return city.properties.featurecla.includes('Admin-0 capital');
 }
-function isLargeCity(city: City): boolean {
+function isLargeCity(city: GeoCity): boolean {
     return city.properties.scalerank <= 2;
 }
 
@@ -74,17 +77,27 @@ const CUSTOM_CITIES_NAME_COORDS: Record<string, [number, number]> = {
     'Kuala Lumpur': [0.5, 0],
 };
 
-export default function MainMap({ selectedNation, activeLayers, onNationClick }: MainMapProps) {
+export default function MainMap({ nations, selectedNation, activeLayers, onNationClick }: MainMapProps) {
     
     const [currentZoom, setCurrentZoom] = useState(1);
     const [cities, setCities] = useState([]);
+    const [geoData, setGeoData] = useState(null); // Stato per i confini
 
     // Carichiamo le città al mount del componente
     useEffect(() => {
+        // Carichiamo i confini del mondo
+        fetch(geoUrl)
+            .then(res => res.json())
+            .then(data => setGeoData(data));
+
+        // Carichiamo le città
         fetch(citiesUrl)
-        .then(res => res.json())
-        .then(data => setCities(data.features));
+            .then(res => res.json())
+            .then(data => setCities(data.features));
     }, []);
+
+    // Se i dati non sono pronti, mostriamo un loader o nulla per evitare il glitch dei marker
+    if (!geoData) return <div className="w-full h-full bg-slate-900 animate-pulse" />;
 
     return (
         <div className="w-full h-full bg-slate-900/50 rounded-lg overflow-hidden map-container border border-slate-800 shadow-inner">
@@ -101,6 +114,33 @@ export default function MainMap({ selectedNation, activeLayers, onNationClick }:
                 projection="geoMercator"
                 onClick={() => onNationClick(null)} // Cliccando sulla mappa fuori dalle nazioni, deseleziona
             >
+
+                <defs>
+                    {/* 1. Il gradiente che abbiamo definito prima */}
+                    <radialGradient id="infectionGradient">
+                        <stop offset="0%" stopColor="rgba(239, 68, 68, 0.8)" />
+                        <stop offset="100%" stopColor="rgba(239, 68, 68, 0)" />
+                    </radialGradient>
+
+                    {/* Generazione dinamica dei ClipPath all'interno del defs */}
+                    {/* <Geographies 
+                        geography={geoData}
+                    >
+                        {({ geographies }: { geographies: Geography[] }) => 
+                            geographies.map((geo) => {
+                                const nationId = geo.id || geo.properties.ISO_A3;
+                                console.log("Generato clipPath per:", nationId, `clip-${geo.id || geo.properties.ISO_A3}`); // <-- Apri la console (F12) e controlla
+                            
+                                return (
+                                    <clipPath id={`clip-${geo.id || geo.properties.ISO_A3}`} key={`clip-${geo.rsmKey}`}>
+                                        <path d={geo.svgPath} />
+                                    </clipPath>
+                                )
+                            }
+                        )}
+                    </Geographies> */}
+                </defs>
+
                 {/* ZoomableGroup permette il drag & zoom */}
                 <ZoomableGroup 
                     zoom={1}
@@ -109,55 +149,74 @@ export default function MainMap({ selectedNation, activeLayers, onNationClick }:
                     maxZoom={60}     // Impedisce di zoomare troppo perdendo definizione
                     center={[10, 0]} // Centra leggermente meglio il mondo
                 >
-                    {/* 1. LIVELLO GEOGRAFIE (Nazioni) */}
+                    {/* LAYER 1. Geografie (Nazioni) */}
                     <Geographies geography={geoUrl}>
-                        {({ geographies }: { geographies: Geography[] }) =>
+                        {({ geographies, projection }: { geographies: Geography[], projection: (coordinates: [number, number]) => [number, number] }) =>
                         geographies.map((geo) => {
-                            // 1. Prova a prendere l'ID di primo livello (es: "VNM")
-                            // 2. Prova ISO_A3 dentro properties
-                            // 3. Usa il nome come ultima spiaggia
                             const nationId = (geo.id || geo.properties.ISO_A3 || geo.properties.name) as string;
-                            
-                            const isSelected = selectedNation === nationId;
+                            const isSelected = selectedNation && selectedNation.id === nationId;
+                            const focus = nations[nationId]?.cities.find((c:City) => c.infectionData && c.infectionData.intensity > 0);
 
                             return (
-                                <Geography
-                                    key={geo.rsmKey}
-                                    geography={geo}
-                                    onClick={(e: React.MouseEvent<SVGPathElement>) => {
-                                        e.stopPropagation();
-                                        onNationClick(nationId);
-                                    }}
-                                    style={{
-                                        default: { 
-                                            fill: isSelected ? "#0ea5e9" : "#1e293b", 
-                                            stroke: isSelected ? "#67e8f9" : "#334155", 
-                                            strokeWidth: 0.2,
-                                            outline: "none",
-                                            transition: "all 300ms"
-                                        },
-                                        hover: { 
-                                            fill: isSelected ? "#0ea5e9" : "#2d3748", 
-                                            stroke: "#0ea5e9",
-                                            strokeWidth: 0.2,
-                                            outline: "none", 
-                                            cursor: "pointer" 
-                                        },
-                                        pressed: { 
-                                            fill: "#0ea5e9", 
-                                            outline: "none" 
-                                        },
-                                    }}
-                                />
+                                <g key={geo.rsmKey}>
+                                {/* LAYER 1. La Nazione Base */}
+                                    <Geography
+                                        key={geo.rsmKey}
+                                        geography={geo}
+                                        onClick={(e: React.MouseEvent<SVGPathElement>) => {
+                                            e.stopPropagation();
+                                            onNationClick(nationId);
+                                        }}
+                                        style={{
+                                            default: { 
+                                                fill: isSelected ? "#0ea5e9" : "#1e293b", 
+                                                stroke: isSelected ? "#67e8f9" : "#334155", 
+                                                strokeWidth: 0.2,
+                                                outline: "none",
+                                                transition: "all 300ms"
+                                            },
+                                            hover: { 
+                                                fill: isSelected ? "#0ea5e9" : "#2d3748", 
+                                                stroke: "#0ea5e9",
+                                                strokeWidth: 0.2,
+                                                outline: "none", 
+                                                cursor: "pointer" 
+                                            },
+                                            pressed: { 
+                                                fill: "#0ea5e9", 
+                                                outline: "none" 
+                                            },
+                                        }}
+                                    />
+                                    {/* LAYER 2. Infezioni */}
+                                    {activeLayers.infections && focus && focus.infectionData && (
+                                    <g>
+                                        <defs>
+                                            <clipPath id={`clip-local-${nationId}`} clipPathUnits="userSpaceOnUse">
+                                                <path d={geo.svgPath} />
+                                            </clipPath>
+                                        </defs>
+                                        
+                                        <circle
+                                            cx={projection(focus.coordinates)[0]} 
+                                            cy={projection(focus.coordinates)[1]}
+                                            clipPath={`url(#clip-local-${nationId})`}
+                                            r={2 + focus.infectionData.intensity * 20}
+                                            fill="url(#infectionGradient)"
+                                            className="animate-pulse"
+                                            style={{ pointerEvents: 'none' }}
+                                        />
+                                    </g>)}
+                                </g>
                             );
                         })
                     }
                     </Geographies>
 
-                    {/* LAYER 2: Città dal GeoJSON (Visibili solo con zoom > 2) */}
-                    {   activeLayers.cities &&
+                    {/* LAYER 3: Città dal GeoJSON (Visibili solo con zoom > 2) */}
+                    {activeLayers.cities &&
                         cities
-                        .filter((city: City) => {
+                        .filter((city: GeoCity) => {
                             // ESEMPIO DI LOGICA DI FILTRAGGIO:
                             // Se zoom < 3, mostra solo città con SCALERANK molto basso (0-2)
                             // Se zoom > 6, mostra quasi tutto
@@ -168,7 +227,7 @@ export default function MainMap({ selectedNation, activeLayers, onNationClick }:
                             // if (currentZoom < 5) return scalerank <= 5;
                             return true;
                         })
-                        .map((city: City) => {
+                        .map((city: GeoCity) => {
                             const coords = city.geometry.coordinates;
                             const cityName = city.properties.name;
 
@@ -238,9 +297,8 @@ export default function MainMap({ selectedNation, activeLayers, onNationClick }:
                         })
                     }
 
-                    {/* LAYER 3: Infrastrutture Strategiche (Icone Custom) */}
-                    {
-                        activeLayers.locations &&
+                    {/* LAYER 4: Infrastrutture Strategiche (Icone Custom) */}
+                    {activeLayers.locations &&
                         WORLD_LOCATIONS.map(loc => (
                             <Marker key={loc.id} coordinates={loc.coordinates}>
                                 <g

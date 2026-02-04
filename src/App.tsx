@@ -87,7 +87,8 @@ function App() {
         {/* La Board della Mappa */}
         <section className="flex-1 relative rounded-xl bg-black/20 border border-slate-800/50 shadow-2xl">
           <MainMap 
-            selectedNation={selectedId} 
+            nations={nations}
+            selectedNation={selectedNation} 
             onNationClick={(id) => handleNationClick(id)} 
             activeLayers={activeLayers}
           />
@@ -103,9 +104,8 @@ function App() {
                   {selectedNation.name}
                 </h2>
                 <div className="mt-4 space-y-2 text-sm">
-                  <p className="flex justify-between"><span>POP:</span> <span className="font-mono">{(selectedNation.population / 1000000).toFixed(1)}M</span></p>
-                  <p className="flex justify-between"><span>INFECTED:</span> <span className="text-red-400 font-bold">{selectedNation.infected}</span></p>
-                  <p className="flex justify-between"><span>BUDGET:</span> <span className="text-yellow-400 font-bold">{selectedNation.resources} PR</span></p>
+                  <p className="flex justify-between"><span>POP:</span> <span className="font-mono">{(selectedNation.totalPopulation / 1000000).toFixed(1)}M</span></p>
+                  <p className="flex justify-between"><span>INFECTED:</span> <span className="text-red-400 font-bold">{selectedNation.totalInfected}</span></p>
                 </div>
                 <hr className="my-4 border-slate-700" />
                 <div className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Status: {selectedNation.isNPC ? "NPC AGENT ACTIVE" : "LOCAL PLAYER"}</div>
