@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+@theme {
+  /* Qui aggiungeremo i tuoi colori personalizzati, es: */
+  --color-cyber-blue: #0ea5e9;
+  --color-map-bg: #0f172a;
+}
+
+body {
+  margin: 0;
+  background-color: #0f172a;
+  overflow: hidden;
+  color: white;
+}
+
+/* Impedisce la selezione del testo durante il dragging */
+.map-container {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  touch-action: none; /* Migliora il drag su dispositivi touch */
+}
