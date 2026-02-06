@@ -63,7 +63,7 @@
         "population": 8400000, 
         "infectedCount": 0, 
         "hasAirport": true, 
-        "isAirportOpen": true,
+        "isAirportOpen": false,
         "hasPort": true, 
         "isPortOpen": true,
         "isCapital": false, 

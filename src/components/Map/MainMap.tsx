@@ -5,7 +5,6 @@ import {
   ZoomableGroup,
   Marker
 } from "react-simple-maps";
-import { WORLD_LOCATIONS } from "../../data/locations";
 import type { City, MainMapProps } from "../../config/interfaces";
 import { useGeoData } from "../../hooks/useGeoData";
 import { useCitiesData } from "../../hooks/useCitiesData";
@@ -15,7 +14,7 @@ import {
     CUSTOM_CITIES_ICON_COODS,
     CUSTOM_CITIES_NAME_COORDS
 } from "../../config/constants";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import type { GeoCity, Geography as IGeography } from "../../config/interfaces";
 
 // URL del GeoJSON per i confini mondiali
@@ -220,31 +219,89 @@ export default function MainMap({ nations, playerNation, activeLayers, selectedN
 
                     {/* LAYER 4: Infrastrutture Strategiche (Icone Custom) */}
                     {activeLayers.locations &&
-                        WORLD_LOCATIONS.map(loc => (
-                            <Marker key={loc.id} coordinates={loc.coordinates}>
-                                <g
-                                    onClick={() => alert(`Menu Gestione Infrastruttura: ${loc.name}`)}
-                                    className="cursor-pointer hover:scale-110 transition-transform"
-                                >
-                                    
-                                    <text 
-                                            textAnchor="middle" 
-                                            alignmentBaseline="central"
-                                            fontSize={1} 
-                                    > 
-                                        {
-                                            /* Mostriamo l'icona in base al tipo */
-                                            /* Se è un aeroporto, mostra l'icona di un aereo */
-                                            /* Se è un porto, mostra l'icona di un'ancora */
-                                            CUSTOM_LOCATION_ICONS[loc.type] || '❓'
-                                        }
-                                    </text> 
-                                </g>
-                            </Marker>
-                        ))
+                        Object.values(nations).flatMap((nation) =>
+                            nation.cities.flatMap((city) => {
+                                if (!Array.isArray(city.coordinates) || city.coordinates.length !== 2) {
+                                    console.error(`Invalid coordinates for city: ${city.name}`, city.coordinates);
+                                    return [];
+                                }
+
+                                const markers: ReactNode[] = [];
+
+                                const airportCoords = getCustomAirportCoords(city.name, city.coordinates);
+
+                                if (city.hasAirport) {
+                                    markers.push(
+                                        <Marker key={`airport-${city.id}`} coordinates={airportCoords}>
+                                            <g
+                                                onClick={() => alert(`Menu Gestione Aeroporto: ${city.name}`)}
+                                                className="cursor-pointer hover:scale-110 transition-transform"
+                                            >
+                                                <text 
+                                                    textAnchor="middle" 
+                                                    alignmentBaseline="central"
+                                                    fontSize={1} 
+                                                    fill="red"
+                                                > 
+                                                    {
+                                                        CUSTOM_LOCATION_ICONS['airport']
+                                                    }
+                                                </text> 
+                                            </g>
+                                        </Marker>
+                                    );
+                                }
+
+                                const portCoords = getCustomPortCoords(city.name, city.coordinates);
+
+                                if (city.hasPort) {
+                                    markers.push(
+                                        <Marker key={`port-${city.id}`} coordinates={portCoords}>
+                                            <g
+                                                onClick={() => alert(`Menu Gestione Porto: ${city.name}`)}
+                                                className="cursor-pointer hover:scale-110 transition-transform"
+                                            >
+                                                <text 
+                                                    textAnchor="middle" 
+                                                    alignmentBaseline="central"
+                                                    fontSize={1} 
+                                                    fill="red"
+                                                > 
+                                                    {CUSTOM_LOCATION_ICONS['port']}
+                                                </text> 
+                                            </g>
+                                        </Marker>
+                                    );
+                                }
+
+                                return markers;
+                            })
+                        )
                     }
                 </ZoomableGroup>
             </ComposableMap>
         </div>
     );
+}
+
+function getCustomAirportCoords(cityName: string, defaultCoords: [number, number]): [number, number] {
+    let coords: [number, number] = [defaultCoords[0] - 0.3, defaultCoords[1] + 0.25]
+    // TODO: gestione custom per sovprapposizioni
+
+    if (cityName === '') {
+        coords = [defaultCoords[0] - 0.5, defaultCoords[1]];
+    }
+
+    return coords;
+}
+
+function getCustomPortCoords(cityName: string, defaultCoords: [number, number]): [number, number] {
+    let coords: [number, number] = [defaultCoords[0] - 0.3, defaultCoords[1] - 0.25]
+    // TODO: gestione custom per sovprapposizioni
+
+    if (cityName === '') {
+        coords = [defaultCoords[0] - 0.5, defaultCoords[1]];
+    }
+
+    return coords;
 }

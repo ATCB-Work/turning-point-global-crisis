@@ -1,6 +1,7 @@
 export const CUSTOM_LOCATION_ICONS: Record<string, string> = {
     'airport': '✈️',
     'port': '⚓',
+    'close': '❌',
 };
 
 export const CUSTOM_CITIES_ICONS: Record<string, string> = {
