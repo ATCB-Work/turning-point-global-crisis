@@ -19,8 +19,9 @@ export interface GeoCity {
 
 export interface MainMapProps {
     nations: Record<string, Nation>;
-    selectedNation: Nation | null;
+    playerNation: Nation;
     activeLayers: Record<string, boolean>;
+    selectedNationId: string | null;
     onNationClick: (id: string | null) => void;
 }
 
@@ -43,6 +44,8 @@ export interface City {
     infectedCount: number;
     hasAirport: boolean;
     hasPort: boolean;
+    isAirportOpen: boolean;
+    isPortOpen: boolean;
     isCapital: boolean;
     coordinates: [number, number]; // Per posizionare i Marker/Infezioni
 
@@ -85,10 +88,17 @@ export interface Nation {
  * @property globalDead - Total number of deaths globally.
  */
 export interface GameState {
+    turnNumber: number;
     nations: Record<string, Nation>;
-    mutationPoints: number;
-    globalInfected: number;
-    globalDead: number;
+    virusStats: {
+        name: string;
+        mutationPoints: number;
+        transmissionAir: number;
+        transmissionWater: number;
+        transmissionLand: number;
+        symptoms: string[];
+        abilities: string[];
+    };
 }
 
 export interface LocationMarker {
@@ -96,4 +106,30 @@ export interface LocationMarker {
   name: string;
   coordinates: [number, number]; // [longitude, latitude]
   type: 'airport' | 'port';
+}
+
+export interface HeaderProps {
+    playerNation: Nation;
+    globalResources: number;
+    currentDate: Date;
+    goToMenu: () => void;
+}
+
+export interface ActionProps {
+    code: string;
+    label: string;
+    cost: number;
+}
+
+export interface PlayerAction {
+    playerId: string;
+    nationId: string;
+    type: string; // Es. "CLOSE_AIRPORT", "QUARANTINE_CITY", ecc.
+    payload: {
+        cityId?: string; // Per azioni che targettano una città specifica
+        mutationId?: string; // Per azioni che riguardano mutazioni
+        investmentAmount?: number; // Per azioni economiche
+        targetNationId?: string; // Per azioni che coinvolgono altre nazioni
+        tagetCityId?: string; // Per azioni che coinvolgono città di altre nazioni
+    }
 }

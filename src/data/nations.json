@@ -14,7 +14,9 @@
         "population": 2800000,
         "infectedCount": 0,
         "hasAirport": true,
+        "isAirportOpen": true,
         "hasPort": false,
+        "isPortOpen": false,
         "isCapital": true,
         "coordinates": [12.4964, 41.9028],
         "infectionData": { "intensity": 0.1, "growthRate": 0.02 }
@@ -37,7 +39,9 @@
         "population": 2100000,
         "infectedCount": 0,
         "hasAirport": true,
+        "isAirportOpen": true,
         "hasPort": false,
+        "isPortOpen": false,
         "isCapital": true,
         "coordinates": [2.3522, 48.8566]
       }
@@ -53,9 +57,46 @@
     "climate": "temperate",
     "neighbors": ["CAN", "MEX"],
     "cities": [
-      { "id": "nyc", "name": "New York", "population": 8400000, "infectedCount": 0, "hasAirport": true, "hasPort": true, "isCapital": false, "coordinates": [-74.0060, 40.7128], "infectionData": { "intensity": 0.5, "growthRate": 0.03 } },
-      { "id": "atl", "name": "Atlanta", "population": 500000, "infectedCount": 0, "hasAirport": true, "hasPort": false, "isCapital": false, "coordinates": [-84.3880, 33.7490] },
-      { "id": "lax", "name": "Los Angeles", "population": 3900000, "infectedCount": 0, "hasAirport": true, "hasPort": true, "isCapital": false, "coordinates": [-118.2437, 34.0522] }
+      { 
+        "id": "nyc", 
+        "name": "New York", 
+        "population": 8400000, 
+        "infectedCount": 0, 
+        "hasAirport": true, 
+        "isAirportOpen": true,
+        "hasPort": true, 
+        "isPortOpen": true,
+        "isCapital": false, 
+        "coordinates": [-74.0060, 40.7128],
+        "infectionData": {
+            "intensity": 0.5, 
+            "growthRate": 0.03 
+            }
+        },
+      { 
+        "id": "atl", 
+        "name": "Atlanta", 
+        "population": 500000, 
+        "infectedCount": 0, 
+        "hasAirport": true,
+        "isAirportOpen": true, 
+        "hasPort": false, 
+        "isPortOpen": false,
+        "isCapital": false,
+         "coordinates": [-84.3880, 33.7490] 
+        },
+      { 
+        "id": "lax", 
+        "name": "Los Angeles", 
+        "population": 3900000, 
+        "infectedCount": 0, 
+        "hasAirport": true, 
+        "isAirportOpen": true,
+        "hasPort": true, 
+        "isPortOpen": true,
+        "isCapital": false, 
+        "coordinates": [-118.2437, 34.0522] 
+    }
     ],
     "isNPC": true
   }

@@ -1,0 +1,11 @@
+{
+  "id": "user-123",
+  "username": "Survivor99",
+  "email": "player@example.com",
+  "stats": {
+    "gamesPlayed": 12,
+    "virusesDefeated": 5,
+    "humanityDefeated": 0
+  },
+  "hasSavedGame": false
+}

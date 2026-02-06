@@ -1,246 +1,139 @@
-import { useEffect, useReducer, useState } from "react";
-import MainMap from "./components/Map/MainMap";
+import { useState, useMemo } from 'react';
+import GameScreen from './components/GameScreen';
+import type { Nation } from './config/interfaces';
 import nationsData from "./data/nations.json";
-import PlayerConsole, { type ActionProps } from "./components/PlayerConsole";
-import type { Nation } from "./config/interfaces";
+import userData from "./data/mockUser.json";
 
-// Added types for reducer and components
-interface LayerAction {
-  type: "TOGGLE_LAYER";
-  layer: "cities" | "locations" | "infections";
-}
+// Tipi per la gestione
+type Screen = 'LOGIN' | 'MENU' | 'SELECT_NATION' | 'GAME';
 
-function layersReducer(
-  state: Record<string, boolean>,
-  action: LayerAction
-): Record<string, boolean> {
-  switch (action.type) {
-    case "TOGGLE_LAYER":
-      return {
-        ...state,
-        [action.layer]: !state[action.layer],
-      };
-    default:
-      return state;
-  }
-}
-
-interface HeaderProps {
-  globalResources: number;
-  currentDate: Date;
-}
-
-// Extracted Header component
-function Header({ globalResources, currentDate }: HeaderProps) {
-  return (
-    <header className="h-16 border-b border-slate-800 bg-slate-900/50 flex items-center justify-between px-8 backdrop-blur-md">
-      <div className="flex items-center gap-4">
-        <div className="h-3 w-3 rounded-full bg-red-500 animate-pulse" />
-        <h1 className="font-black italic tracking-tighter text-xl uppercase">
-          Turning Point
-        </h1>
-      </div>
-      <div className="">
-        {/* Pannello Risorse */}
-        <div className="flex flex-col items-center min-w-[120px]">
-          <span className="text-[10px] text-cyan-500 font-bold tracking-widest uppercase">
-            Budget Disp.
-          </span>
-          <span className="text-3xl font-black text-yellow-400">
-            {globalResources}
-            <span className="text-sm ml-1 text-yellow-600">PR</span>
-          </span>
-        </div>
-      </div>
-      <div className="flex gap-8 text-sm font-mono">
-        <div>
-          DATA:{" "}
-          <span className="text-cyan-400">
-            {currentDate.toLocaleDateString("it-IT", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            })}
-          </span>
-        </div>
-        <div>
-          MINACCIA:{" "}
-          <span className="text-red-500 font-bold underline">LIVELLO 1</span>
-        </div>
-      </div>
-    </header>
-  );
-}
-
-interface FooterProps {
-  onAction: (action: ActionProps) => void;
-  onEndTurn: () => void;
-  activeLayers: Record<string, boolean>;
-  handleLayerToggle: (layer: "cities" | "locations" | "infections") => void;
-}
-
-// Extracted Footer component
-function Footer({ onAction, onEndTurn, activeLayers, handleLayerToggle }: FooterProps) {
-  return (
-    <footer className="h-32 relative">
-      <PlayerConsole
-        onAction={onAction}
-        onEndTurn={onEndTurn}
-        activeLayers={activeLayers}
-        handleLayerToggle={handleLayerToggle}
-      />
-    </footer>
-  );
+interface User {
+  id: string;
+  username: string;
+  email: string;
+  stats: {
+    gamesPlayed: number;
+    virusesDefeated: number;
+    humanityDefeated: number;
+  };
+  hasSavedGame: boolean;
 }
 
 function App() {
-  // Carichiamo tutte le nazioni nello stato del gioco
-  const nations: Record<string, Nation> = Object.fromEntries(
-    Object.entries(nationsData).map(([key, value]) => [
-      key,
-      {
-        ...value,
-        climate: value.climate as 'temperate' | 'cold' | 'hot',
-        cities: value.cities.map((city) => ({
-          ...city,
-          coordinates: city.coordinates.length === 2
-            ? ([city.coordinates[0], city.coordinates[1]] as [number, number])
-            : [0, 0],
-        })),
-      },
-    ])
-  );
-
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [currentDate, setCurrentDate] = useState<Date>(new Date("01 Jan 2020"));
-  const [activeLayers, dispatch] = useReducer(layersReducer, {
-    cities: true,
-    locations: true,
-    infections: true,
-  });
-
-  const [actionsToExecute, setActionsToExecute] = useState<ActionProps[]>([]);
-
-  // Recuperiamo i dati della nazione selezionata
-  const selectedNation = selectedId ? nations[selectedId] : null;
-
-  // Simuliamo un budget globale per il giocatore (o prendiamolo dalla nazione selezionata)
-  const [globalResources] = useState(500);
-
-  // In App.tsx
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setSelectedId(null);
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    // Pulizia del listener quando il componente viene smontato
-    return () => window.removeEventListener("keydown", handleKeyDown);
+  
+  const [currentScreen, setCurrentScreen] = useState<Screen>('LOGIN');
+  const [user, setUser] = useState<User | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [playerNation, setPlayerNation] = useState<Nation | null>(null);
+ 
+  // Carichiamo le nazioni una volta all'avvio
+  const nations = useMemo(() => {
+    return Object.fromEntries(
+      Object.entries(nationsData).map(([key, value]) => [
+        key,
+        {
+          ...value,
+          climate: value.climate as 'temperate' | 'cold' | 'hot',
+          cities: value.cities.map((city) => ({
+            ...city,
+            coordinates: city.coordinates.length === 2
+              ? ([city.coordinates[0], city.coordinates[1]] as [number, number])
+              : ([0, 0] as [number, number]),
+          })),
+        },
+      ])
+    );
   }, []);
 
-  const handleNationClick = (id: string | null) => {
-    // Se clicco la nazione già selezionata, deseleziona. Altrimenti seleziona la nuova.
-    setSelectedId((prevId) => (prevId === id ? null : id));
+  // Filtro intelligente: memorizzato per performance
+  const filteredNations = useMemo(() => {
+    return Object.values(nations).filter(n => 
+      n.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [nations, searchTerm]);
+
+  const handleLogin = () => {
+    // Simuliamo il caricamento dal JSON
+    setUser(userData);
+    setCurrentScreen('MENU');
   };
 
-  const handleAction = (action: ActionProps) => {
-    setActionsToExecute((prev) => [...prev, { code: action.code, label: action.label, cost: action.cost }]);
-  };
-
-  const handleEndTurn = () => {
-    setCurrentDate((prev) => {
-      const newDate = new Date(prev);
-      newDate.setDate(newDate.getDate() + 7); // Avanza di una settimana
-      return newDate;
-    });
-    alert("Turno terminato. Il virus si sta diffondendo...");
-    console.log("Azioni da eseguire questo turno:");
-    actionsToExecute.forEach((action) => {
-      console.log(`- ${action.label} (Costo: ${action.cost} PR)`);
-    });
-    // Qui chiameremo il motore di simulazione
-  };
-
-  const handleLayerToggle = (layer: "cities" | "locations" | "infections") => {
-    dispatch({ type: "TOGGLE_LAYER", layer });
+  const startNewGame = (nation: Nation) => {
+    setPlayerNation(nation);
+    setCurrentScreen('GAME');
   };
 
   return (
     <div className="flex flex-col w-screen h-screen bg-slate-950 text-slate-100 overflow-hidden font-sans">
-      <Header globalResources={globalResources} currentDate={currentDate} />
 
-      {/* 2. MAIN AREA - Mappa e Sidebar */}
-      <main
-        className={`flex-1 relative flex overflow-hidden p-4 ${
-          selectedId ? "gap-4" : "gap-0"
-        } transition-all duration-500`}
-      >
-        {/* La Board della Mappa */}
-        <section className="flex-1 relative rounded-xl bg-black/20 border border-slate-800/50 shadow-2xl">
-          <MainMap
-            nations={nations}
-            selectedNation={selectedNation}
-            onNationClick={(id) => handleNationClick(id)}
-            activeLayers={activeLayers}
-          />
-        </section>
+      {/* 1. SCHERMATA LOGIN */}
+      {currentScreen === 'LOGIN' && (
+        <div className="flex flex-col items-center justify-center h-screen">
+          <h1 className="text-5xl font-black mb-8 tracking-tighter text-red-600">PANDEMIC CONTROL</h1>
+          <button 
+            onClick={handleLogin}
+            className="px-8 py-3 bg-blue-600 hover:bg-blue-500 rounded font-bold transition-all"
+          >
+            ACCEDI (Mock User)
+          </button>
+        </div>
+      )}
 
-        {/* Sidebar Dettagli Nazione */}
-        <aside
-          className={`${
-            selectedId ? "w-80" : "w-0"
-          } transition-all duration-500 ${
-            selectedId
-              ? "translate-x-0 opacity-100"
-              : "translate-x-10 opacity-0 pointer-events-none"
-          }`}
-        >
-          {/* Qui inseriremo il futuro NationPopup o i dettagli della nazione */}
-          <div className="h-full bg-slate-900/80 border border-slate-700 p-6 rounded-xl backdrop-blur-xl shadow-2xl">
-            {selectedNation ? (
-              <div>
-                <h2 className="text-2xl font-black italic uppercase tracking-tighter text-cyan-400">
-                  {selectedNation.name}
-                </h2>
-                <div className="mt-4 space-y-2 text-sm">
-                  <p className="flex justify-between">
-                    <span>POP:</span>{" "}
-                    <span className="font-mono">
-                      {(selectedNation.totalPopulation / 1000000).toFixed(1)}M
-                    </span>
-                  </p>
-                  <p className="flex justify-between">
-                    <span>INFECTED:</span>{" "}
-                    <span className="text-red-400 font-bold">
-                      {selectedNation.totalInfected}
-                    </span>
-                  </p>
-                </div>
-                <hr className="my-4 border-slate-700" />
-                <div className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
-                  Status:{" "}
-                  {selectedNation.isNPC
-                    ? "NPC AGENT ACTIVE"
-                    : "LOCAL PLAYER"}
-                </div>
-              </div>
-            ) : (
-              <p className="text-slate-500 italic text-center text-sm">
-                Seleziona una nazione sulla mappa per i dati strategici.
-              </p>
-            )}
+      {/* 2. MENU PRINCIPALE */}
+      {currentScreen === 'MENU' && (
+        <div className="flex flex-col items-center justify-center h-screen space-y-4">
+          <h2 className="text-2xl mb-6">Benvenuto, {user?.username}</h2>
+          <button 
+            onClick={() => setCurrentScreen('SELECT_NATION')}
+            className="w-64 py-3 bg-green-700 hover:bg-green-600 rounded font-bold"
+          >
+            NUOVA PARTITA
+          </button>
+          <button 
+            disabled 
+            className="w-64 py-3 bg-slate-800 text-slate-500 rounded font-bold cursor-not-allowed"
+          >
+            CARICA PARTITA (No Save)
+          </button>
+        </div>
+      )}
+      
+      {/* 3. SELEZIONE NAZIONE */}
+      {currentScreen === 'SELECT_NATION' && (
+        <div className="p-8 max-w-6xl mx-auto">
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-3xl font-bold">Seleziona la tua Nazione</h2>
+            <input 
+              type="text" 
+              placeholder="Cerca nazione..." 
+              className="bg-slate-800 border border-slate-700 p-2 rounded w-64 focus:outline-none focus:border-blue-500"
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
-        </aside>
-      </main>
 
-      <Footer
-        onAction={handleAction}
-        onEndTurn={handleEndTurn}
-        activeLayers={activeLayers}
-        handleLayerToggle={handleLayerToggle}
-      />
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {filteredNations.map(nation => (
+              <div 
+                key={nation.id}
+                onClick={() => startNewGame(nation)}
+                className="bg-slate-900 p-4 rounded-xl border-2 border-transparent hover:border-blue-500 cursor-pointer transition-all flex flex-col items-center text-center"
+              >
+                {/* Placeholder per la bandiera */}
+                <div className="w-16 h-10 bg-slate-800 rounded mb-2 flex items-center justify-center text-xs text-slate-500 font-bold">
+                  {nation.id}
+                </div>
+                <span className="font-medium">{nation.name}</span>
+                <span className="text-xs text-slate-500">{nation.totalPopulation.toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 4. IL GIOCO (La tua Mappa) */}
+      {currentScreen === 'GAME' && playerNation && (
+        <GameScreen playerNation={playerNation} nations={nations} goToMenu={() => setCurrentScreen('MENU')} />
+      )}
     </div>
   );
 }

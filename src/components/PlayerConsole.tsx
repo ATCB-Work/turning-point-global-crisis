@@ -1,17 +1,12 @@
 import React, { useState } from 'react';
 import ACTIONS from '../data/actions.json';
+import type { ActionProps } from '../config/interfaces';
 
 interface PlayerConsoleProps {
     onAction: (action: ActionProps) => void;
     onEndTurn: () => void;
     activeLayers: Record<string, boolean>;
     handleLayerToggle: (layer: "cities" | "locations" | "infections") => void;
-}
-
-export interface ActionProps {
-    code: string;
-    label: string;
-    cost: number;
 }
 
 interface ActionButtonProps {

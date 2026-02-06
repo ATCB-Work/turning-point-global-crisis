@@ -29,12 +29,12 @@ function isLargeCity(city: GeoCity): boolean {
     return city.properties.scalerank <= 2;
 }
 
-export default function MainMap({ nations, selectedNation, activeLayers, onNationClick }: MainMapProps) {
+export default function MainMap({ nations, playerNation, activeLayers, selectedNationId, onNationClick }: MainMapProps) {
     const geoData = useGeoData(geoUrl);
     const cities = useCitiesData(citiesUrl);
 
-    const [currentZoom, setCurrentZoom] = useState(1);
-
+    const [ currentZoom, setCurrentZoom ] = useState(1);
+    
     // Se i dati non sono pronti, mostriamo un loader o nulla per evitare il glitch dei marker
     if (!geoData) return <div className="w-full h-full bg-slate-900 animate-pulse" />;
 
@@ -75,7 +75,7 @@ export default function MainMap({ nations, selectedNation, activeLayers, onNatio
                         {({ geographies, projection }: { geographies: IGeography[], projection: (coordinates: [number, number]) => [number, number] }) =>
                         geographies.map((geo) => {
                             const nationId = (geo.id || geo.properties.ISO_A3 || geo.properties.name) as string;
-                            const isSelected = selectedNation && selectedNation.id === nationId;
+                            const isSelected = selectedNationId === nationId;
                             const focus = nations[nationId]?.cities.find((c:City) => c.infectionData && c.infectionData.intensity > 0);
                     
                             return (
@@ -90,14 +90,14 @@ export default function MainMap({ nations, selectedNation, activeLayers, onNatio
                                         }}
                                         style={{
                                             default: { 
-                                                fill: isSelected ? "#0ea5e9" : "#1e293b", 
-                                                stroke: isSelected ? "#67e8f9" : "#334155", 
+                                                fill: isSelected ? (playerNation?.id === nationId ? "#91c8e2ff" : "#0ea5e9") : "#1e293b", 
+                                                stroke: isSelected ? (playerNation?.id === nationId ? "#88d0f1ff" : "#67e8f9") : "#334155", 
                                                 strokeWidth: 0.2,
                                                 outline: "none",
                                                 transition: "all 300ms"
                                             },
                                             hover: { 
-                                                fill: isSelected ? "#0ea5e9" : "#2d3748", 
+                                                fill: isSelected ? (playerNation?.id === nationId ? "#91c8e2ff" : "#0ea5e9") : "#2d3748", 
                                                 stroke: "#0ea5e9",
                                                 strokeWidth: 0.2,
                                                 outline: "none", 
