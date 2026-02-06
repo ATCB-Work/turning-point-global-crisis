@@ -1,3 +1,15 @@
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  stats: {
+    gamesPlayed: number;
+    virusesDefeated: number;
+    humanityDefeated: number;
+  };
+  hasSavedGame: boolean;
+}
+
 export interface Geography {
     svgPath: string | undefined;
     id: string;
@@ -90,6 +102,7 @@ export interface Nation {
 export interface GameState {
     turnNumber: number;
     nations: Record<string, Nation>;
+    globalInfected: number;
     virusStats: {
         name: string;
         mutationPoints: number;
@@ -121,15 +134,21 @@ export interface ActionProps {
     cost: number;
 }
 
-export interface PlayerAction {
+export interface PlayerAction extends Action {
     playerId: string;
     nationId: string;
-    type: string; // Es. "CLOSE_AIRPORT", "QUARANTINE_CITY", ecc.
-    payload: {
+    payload?: {
         cityId?: string; // Per azioni che targettano una città specifica
         mutationId?: string; // Per azioni che riguardano mutazioni
         investmentAmount?: number; // Per azioni economiche
         targetNationId?: string; // Per azioni che coinvolgono altre nazioni
         tagetCityId?: string; // Per azioni che coinvolgono città di altre nazioni
     }
+}
+
+export interface Action {
+    actionId: string; // UUID o identificatore univoco dell'azione
+    actionName: string; // Es. "Close Airport", "Quarantine City", ecc.
+    actionCost: number; // Costo in PR (Pandemic Resources)
+    type: string; // Es. "CLOSE_AIRPORT", "QUARANTINE_CITY", ecc.
 }

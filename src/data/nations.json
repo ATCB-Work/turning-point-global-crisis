@@ -1,103 +1,98 @@
 {
-  "ITA": {
-    "id": "ITA",
-    "name": "Italia",
-    "totalPopulation": 60000000,
-    "totalInfected": 0,
-    "baseResistance": 0.7,
-    "climate": "temperate",
-    "neighbors": ["FRA", "AUT", "CHE", "SVN"],
-    "cities": [
-      {
-        "id": "rom",
-        "name": "Roma",
-        "population": 2800000,
-        "infectedCount": 0,
-        "hasAirport": true,
-        "isAirportOpen": true,
-        "hasPort": false,
-        "isPortOpen": false,
-        "isCapital": true,
-        "coordinates": [12.4964, 41.9028],
-        "infectionData": { "intensity": 0.1, "growthRate": 0.02 }
-      }
-    ],
-    "isNPC": false
-  },
-  "FRA": {
-    "id": "FRA",
-    "name": "Francia",
-    "totalPopulation": 67000000,
-    "totalInfected": 0,
-    "baseResistance": 0.75,
-    "climate": "temperate",
-    "neighbors": ["ITA", "ESP", "BEL", "DEU", "CHE"],
-    "cities": [
-      {
-        "id": "par",
-        "name": "Parigi",
-        "population": 2100000,
-        "infectedCount": 0,
-        "hasAirport": true,
-        "isAirportOpen": true,
-        "hasPort": false,
-        "isPortOpen": false,
-        "isCapital": true,
-        "coordinates": [2.3522, 48.8566]
-      }
-    ],
-    "isNPC": true
-  },
-  "USA": {
-    "id": "USA",
-    "name": "Stati Uniti",
-    "totalPopulation": 331000000,
-    "totalInfected": 0,
-    "baseResistance": 0.8,
-    "climate": "temperate",
-    "neighbors": ["CAN", "MEX"],
-    "cities": [
-      { 
-        "id": "nyc", 
-        "name": "New York", 
-        "population": 8400000, 
-        "infectedCount": 0, 
-        "hasAirport": true, 
-        "isAirportOpen": false,
-        "hasPort": true, 
-        "isPortOpen": true,
-        "isCapital": false, 
-        "coordinates": [-74.0060, 40.7128],
-        "infectionData": {
-            "intensity": 0.5, 
-            "growthRate": 0.03 
+    "ITA": {
+        "id": "ITA",
+        "name": "Italia",
+        "totalPopulation": 60000000,
+        "totalInfected": 0,
+        "baseResistance": 0.7,
+        "climate": "temperate",
+        "neighbors": ["FRA", "AUT", "CHE", "SVN"],
+        "cities": [
+            {
+                "id": "rom",
+                "name": "Roma",
+                "population": 2800000,
+                "infectedCount": 0,
+                "hasAirport": true,
+                "isAirportOpen": true,
+                "hasPort": false,
+                "isPortOpen": false,
+                "isCapital": true,
+                "coordinates": [12.4964, 41.9028]
             }
-        },
-      { 
-        "id": "atl", 
-        "name": "Atlanta", 
-        "population": 500000, 
-        "infectedCount": 0, 
-        "hasAirport": true,
-        "isAirportOpen": true, 
-        "hasPort": false, 
-        "isPortOpen": false,
-        "isCapital": false,
-         "coordinates": [-84.3880, 33.7490] 
-        },
-      { 
-        "id": "lax", 
-        "name": "Los Angeles", 
-        "population": 3900000, 
-        "infectedCount": 0, 
-        "hasAirport": true, 
-        "isAirportOpen": true,
-        "hasPort": true, 
-        "isPortOpen": true,
-        "isCapital": false, 
-        "coordinates": [-118.2437, 34.0522] 
+        ],
+        "isNPC": false
+    },
+    "FRA": {
+        "id": "FRA",
+        "name": "Francia",
+        "totalPopulation": 67000000,
+        "totalInfected": 0,
+        "baseResistance": 0.75,
+        "climate": "temperate",
+        "neighbors": ["ITA", "ESP", "BEL", "DEU", "CHE"],
+        "cities": [
+            {
+                "id": "par",
+                "name": "Parigi",
+                "population": 2100000,
+                "infectedCount": 0,
+                "hasAirport": true,
+                "isAirportOpen": true,
+                "hasPort": false,
+                "isPortOpen": false,
+                "isCapital": true,
+                "coordinates": [2.3522, 48.8566]
+            }
+        ],
+        "isNPC": true
+    },
+    "USA": {
+        "id": "USA",
+        "name": "Stati Uniti",
+        "totalPopulation": 331000000,
+        "totalInfected": 0,
+        "baseResistance": 0.8,
+        "climate": "temperate",
+        "neighbors": ["CAN", "MEX"],
+        "cities": [
+            { 
+                "id": "nyc", 
+                "name": "New York", 
+                "population": 8400000, 
+                "infectedCount": 0, 
+                "hasAirport": true, 
+                "isAirportOpen": false,
+                "hasPort": true, 
+                "isPortOpen": true,
+                "isCapital": false, 
+                "coordinates": [-74.0060, 40.7128]
+            },
+            { 
+                "id": "atl", 
+                "name": "Atlanta", 
+                "population": 500000, 
+                "infectedCount": 0, 
+                "hasAirport": true,
+                "isAirportOpen": true, 
+                "hasPort": false, 
+                "isPortOpen": false,
+                "isCapital": false,
+                "coordinates": [-84.3880, 33.7490] 
+            },
+            { 
+                "id": "lax", 
+                "name": "Los Angeles", 
+                "population": 3900000, 
+                "infectedCount": 0, 
+                "hasAirport": true, 
+                "isAirportOpen": true,
+                "hasPort": true, 
+                "isPortOpen": true,
+                "isCapital": false, 
+                "coordinates": [-118.2437, 34.0522] 
+            }
+        ],
+        "isNPC": true
     }
-    ],
-    "isNPC": true
-  }
 }

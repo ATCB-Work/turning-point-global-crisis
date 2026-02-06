@@ -2,7 +2,8 @@ import { useEffect, useReducer, useState } from "react";
 import { Header } from "./Header";
 import MainMap from "./Map/MainMap";
 import { Footer } from "./Footer";
-import type { Nation, ActionProps } from "../config/interfaces";
+import type { Nation, User, GameState, PlayerAction, Action } from "../config/interfaces";
+import { initInfection, processTurn } from "../hooks/gameEngine";
 
 // Added types for reducer and components
 interface LayerAction {
@@ -25,7 +26,24 @@ function layersReducer(
   }
 }
 
-function GameScreen({ playerNation, nations, goToMenu }: { playerNation: Nation, nations: Record<string, Nation>, goToMenu: () => void }) {
+function createInitialState(nations: Record<string, Nation>): GameState {
+  return {
+    turnNumber: 1,
+    nations: nations,
+    globalInfected: 0,
+    virusStats: {
+      name: "Unknown Virus",
+      mutationPoints: 0,
+      transmissionAir: 0,
+      transmissionWater: 0,
+      transmissionLand: 0,
+      symptoms: [],
+      abilities: [],
+    },
+  };
+}
+
+function GameScreen({ user, playerNation, nations, goToMenu }: { user: User, playerNation: Nation, nations: Record<string, Nation>, goToMenu: () => void }) {
     // Carichiamo tutte le nazioni nello stato del gioco
 
     const [currentDate, setCurrentDate] = useState<Date>(new Date("01 Jan 2020"));
@@ -36,10 +54,52 @@ function GameScreen({ playerNation, nations, goToMenu }: { playerNation: Nation,
     });
 
     const [selectedNationId, setSelectedNationId] = useState<string | null>(null);
-    const [actionsToExecute, setActionsToExecute] = useState<ActionProps[]>([]);
 
     // Simuliamo un budget globale per il giocatore (o prendiamolo dalla nazione selezionata)
     const [globalResources] = useState(500);
+
+    // 1. Inserimento nel componente che gestisce lo stato del gioco
+    const [gameState, setGameState] = useState<GameState>(() => {
+        const initialState = createInitialState(nations);
+        return initInfection(initialState);
+    });
+    const [pendingActions, setPendingActions] = useState<PlayerAction[]>([]);
+    const [hasFinishedTurn, setHasFinishedTurn] = useState(false);
+    const allPlayersReady = true; // In un multiplayer reale, qui controlleresti se tutti i giocatori hanno confermato il turno
+
+    const handleConfirmTurn = () => {
+        setHasFinishedTurn(true);
+        
+        // In multiplayer qui manderesti 'pendingActions' al server.
+        // In locale/mock, chiamiamo la risoluzione direttamente:
+        if (allPlayersReady) { 
+            triggerProcessTurn();
+        }
+    }
+
+    const triggerProcessTurn = async () => {
+        // A. Raccogliamo le azioni dell'IA (se presenti)
+        const aiActions: [] = []; //generateAIActions(gameState);
+        
+        // B. Uniamo le azioni dei player reali con quelle dell'IA
+        const allActions = [...pendingActions, ...aiActions];
+
+        // C. Eseguiamo la "magia" del Tick
+        const nextState = await processTurn(gameState, allActions);
+
+        // D. Aggiorniamo lo stato globale (questo farà aggiornare mappa, cerchi e icone)
+        setGameState(nextState);
+
+        setCurrentDate((prev) => {
+            const newDate = new Date(prev);
+            newDate.setDate(newDate.getDate() + 7); // Avanza di una settimana
+            return newDate;
+        });
+
+        // E. Puliamo la coda delle azioni per il turno successivo
+        setPendingActions([]);
+        setHasFinishedTurn(false);
+    };
 
     // In App.tsx
     useEffect(() => {
@@ -55,23 +115,19 @@ function GameScreen({ playerNation, nations, goToMenu }: { playerNation: Nation,
     }, []);
 
 
-    const handleAction = (action: ActionProps) => {
-    setActionsToExecute((prev) => [...prev, { code: action.code, label: action.label, cost: action.cost }]);
-    };
+    const handleAction = (action: Action, payload: PlayerAction["payload"] | null) => {
+        const newAction: PlayerAction = {
+            playerId: user.id,
+            nationId: playerNation.id, // La nazione che controlli
+            ...action
+        };
 
-    const handleEndTurn = () => {
-    setCurrentDate((prev) => {
-        const newDate = new Date(prev);
-        newDate.setDate(newDate.getDate() + 7); // Avanza di una settimana
-        return newDate;
-    });
-    alert("Turno terminato. Il virus si sta diffondendo...");
-    console.log("Azioni da eseguire questo turno:");
-    actionsToExecute.forEach((action) => {
-        console.log(`- ${action.label} (Costo: ${action.cost} PR)`);
-    });
-    // Qui chiameremo il motore di simulazione
-    };
+        if (payload) {
+            newAction.payload = payload;
+        }
+        
+        setPendingActions(prev => [...prev, newAction]);
+    }
 
     const handleLayerToggle = (layer: "cities" | "locations" | "infections") => {
     dispatch({ type: "TOGGLE_LAYER", layer });
@@ -94,7 +150,7 @@ function GameScreen({ playerNation, nations, goToMenu }: { playerNation: Nation,
                 {/* La Board della Mappa */}
                 <section className="flex-1 relative rounded-xl bg-black/20 border border-slate-800/50 shadow-2xl">
                     <MainMap
-                        nations={nations}
+                        nations={gameState.nations}
                         playerNation={playerNation}
                         selectedNationId={selectedNationId}
                         onNationClick={handleNationClick}
@@ -145,8 +201,9 @@ function GameScreen({ playerNation, nations, goToMenu }: { playerNation: Nation,
             <Footer
                 activeLayers={activeLayers}
                 onAction={handleAction}
-                onEndTurn={handleEndTurn}
+                onEndTurn={handleConfirmTurn}
                 handleLayerToggle={handleLayerToggle}
+                hasFinishedTurn={hasFinishedTurn}
             />
         </div>
     );

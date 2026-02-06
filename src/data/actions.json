@@ -1,30 +1,55 @@
 {
     "healthcare": [
+        {
+            "actionId": "H1A", 
+            "actionName": "Chiudi tutti gli aeroporti",
+            "actionCost": 50,
+            "type": "CLOSE_ALL_AIRPORTS"
+        },
+        {
+            
+            "actionId": "H1B", 
+            "actionName": "Chiudi aeroporto",
+            "actionCost": 10,
+            "type": "CLOSE_AIRPORT"
+        },
         { 
-            "code": "healthcare_increase_capacity", 
-            "label": "Aumenta Capacità Ospedaliera", 
-            "cost": 20 
+            "actionId": "H2A", 
+            "actionName": "Chiudi tutti i porti", 
+            "actionCost": 50,
+            "type": "CLOSE_ALL_PORTS"
+        },
+        { 
+            "actionId": "H2B", 
+            "actionName": "Chiudi porto", 
+            "actionCost": 10,
+            "type": "CLOSE_PORT"
         }
     ],
     "military": [
         { 
-            "code": "military_block_roads", 
-            "label": "Blocchi Stradali", 
-            "cost": 15 
+            "actionId": "M1", 
+            "actionName": "Blocchi Stradali", 
+            "actionCost": 15,
+            "type": "BLOCK_ROADS"
         }
     ],
     "research": [
         { 
-            "code": "research_develop_vaccine", 
-            "label": "Sviluppa Vaccino", 
-            "cost": 50 
+            "actionId": "R1", 
+            "actionName": "Sviluppa Vaccino", 
+            "actionCost": 50,
+            "type": "DEVELOP_VACCINE"
         }
     ],
     "economy": [
         { 
-            "code": "economy_stimulus", 
-            "label": "Stimolo Economico", 
-            "cost": 30 
+            "actionId": "E1", 
+            "actionName": "Stimolo Economico", 
+            "actionCost": 30,
+            "type": "ECONOMIC_STIMULUS"
         }
     ]
+
+    
 }

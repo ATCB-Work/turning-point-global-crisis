@@ -1,23 +1,11 @@
 import { useState, useMemo } from 'react';
 import GameScreen from './components/GameScreen';
-import type { Nation } from './config/interfaces';
+import type { Nation, User } from './config/interfaces';
 import nationsData from "./data/nations.json";
 import userData from "./data/mockUser.json";
 
 // Tipi per la gestione
 type Screen = 'LOGIN' | 'MENU' | 'SELECT_NATION' | 'GAME';
-
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  stats: {
-    gamesPlayed: number;
-    virusesDefeated: number;
-    humanityDefeated: number;
-  };
-  hasSavedGame: boolean;
-}
 
 function App() {
   
@@ -131,8 +119,8 @@ function App() {
       )}
 
       {/* 4. IL GIOCO (La tua Mappa) */}
-      {currentScreen === 'GAME' && playerNation && (
-        <GameScreen playerNation={playerNation} nations={nations} goToMenu={() => setCurrentScreen('MENU')} />
+      {currentScreen === 'GAME' && playerNation && user && (
+        <GameScreen user={user} playerNation={playerNation} nations={nations} goToMenu={() => setCurrentScreen('MENU')} />
       )}
     </div>
   );
