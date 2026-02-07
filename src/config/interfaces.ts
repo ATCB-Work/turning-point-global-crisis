@@ -10,6 +10,10 @@ export interface User {
   hasSavedGame: boolean;
 }
 
+export interface Player extends User {
+    isVirus: boolean | undefined; // Se è il giocatore che controlla il virus (in un multiplayer asimmetrico)
+}
+
 export interface Geography {
     svgPath: string | undefined;
     id: string;
@@ -89,7 +93,7 @@ export interface Nation {
     cities: City[];
     neighbors: string[]; // ID delle nazioni confinanti via terra
     climate: 'cold' | 'hot' | 'temperate';
-    isNPC: boolean; // Se è controllata dall'IA
+    player?: Player
 }
 
 /**
@@ -103,15 +107,7 @@ export interface GameState {
     turnNumber: number;
     nations: Record<string, Nation>;
     globalInfected: number;
-    virusStats: {
-        name: string;
-        mutationPoints: number;
-        transmissionAir: number;
-        transmissionWater: number;
-        transmissionLand: number;
-        symptoms: string[];
-        abilities: string[];
-    };
+    virusStats: VirusStats;
 }
 
 export interface LocationMarker {
@@ -151,4 +147,21 @@ export interface Action {
     actionName: string; // Es. "Close Airport", "Quarantine City", ecc.
     actionCost: number; // Costo in PR (Pandemic Resources)
     type: string; // Es. "CLOSE_AIRPORT", "QUARANTINE_CITY", ecc.
+}
+
+export interface VirusStats {
+    name: string;
+    mutationPoints: number;     // Valori numerici per i calcoli di processTurn
+    infectivity: number;        // Capacità di diffondersi (0-100)
+    lethality: number;          // Capacità di uccidere (0-100)
+    resistance: number;         // Resistenza alle cure/climi (0-100)
+    
+    // Tratti acquisiti
+    transmission: {
+        air: number;
+        water: number;
+        land: number;
+    };
+    symptoms: string[];
+    abilities: string[];
 }

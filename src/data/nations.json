@@ -20,8 +20,7 @@
                 "isCapital": true,
                 "coordinates": [12.4964, 41.9028]
             }
-        ],
-        "isNPC": false
+        ]
     },
     "FRA": {
         "id": "FRA",
@@ -44,8 +43,7 @@
                 "isCapital": true,
                 "coordinates": [2.3522, 48.8566]
             }
-        ],
-        "isNPC": true
+        ]
     },
     "USA": {
         "id": "USA",
@@ -92,7 +90,6 @@
                 "isCapital": false, 
                 "coordinates": [-118.2437, 34.0522] 
             }
-        ],
-        "isNPC": true
+        ]
     }
 }

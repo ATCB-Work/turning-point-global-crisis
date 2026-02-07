@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
-import ACTIONS from '../data/actions.json';
 import type { Action, PlayerAction } from '../config/interfaces';
 
 interface PlayerConsoleProps {
+    actions: {
+        healthcare?: Action[];
+        military?: Action[];
+        research?: Action[];
+        economy?: Action[];
+        virus?: Action[]; 
+    };
     onAction: (action: Action, payload: PlayerAction["payload"] | null) => void;
     onEndTurn: () => void;
     activeLayers: Record<string, boolean>;
@@ -17,7 +23,7 @@ interface ActionButtonProps {
     color: string;
 }
 
-const PlayerConsole: React.FC<PlayerConsoleProps> = ({ onAction, onEndTurn, activeLayers, handleLayerToggle, hasFinishedTurn }) => {
+const PlayerConsole: React.FC<PlayerConsoleProps> = ({ actions, onAction, onEndTurn, activeLayers, handleLayerToggle, hasFinishedTurn }) => {
 
     const [showSettings, setShowSettings] = useState(false);
     const [showHealthcareActions, setShowHealthcareActions] = useState(false);
@@ -67,9 +73,40 @@ const PlayerConsole: React.FC<PlayerConsoleProps> = ({ onAction, onEndTurn, acti
                     <ActionButton label="Economia" icon="📈" onClick={() => {setShowEconomicActions(!showEconomicActions); setShowHealthcareActions(false); setShowMilitaryActions(false); setShowResearchActions(false); }} color="border-green-500 text-green-400 cursor-pointer" />
                 </div>
 
-                <div className={`absolute bottom-20 left-6 p-4 rounded-2xl flex flex-col gap-2 border border-slate-700 shadow-2xl transition-all bg-slate-900/80 backdrop-blur-md ${showHealthcareActions ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
+                {
+                    actions.healthcare && <div className={`absolute bottom-20 left-6 p-4 rounded-2xl flex flex-col gap-2 border border-slate-700 shadow-2xl transition-all bg-slate-900/80 backdrop-blur-md ${showHealthcareActions ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
+                        {
+                            actions.healthcare.map((action: Action) => (
+                                <button
+                                    key={action.actionId}
+                                    onClick={() => onAction(action, null)}
+                                    className={`px-3 py-1 rounded-xl text-sm font-bold bg-cyan-600 text-white cursor-pointer`}
+                                >
+                                    {action.actionName} - <span className="text-yellow-400 font-bold">{action.actionCost} PR</span>
+                                </button>
+                            ))
+                        }
+                    </div>
+                }
+                {
+                    actions.military && <div className={`absolute bottom-20 left-6 p-4 rounded-2xl flex flex-col gap-2 border border-slate-700 shadow-2xl transition-all bg-slate-900/80 backdrop-blur-md ${showMilitaryActions ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
+                        {
+                            actions.military.map((action: Action) => (
+                                <button
+                                    key={action.actionId}
+                                    onClick={() => onAction(action, null)}
+                                    className={`px-3 py-1 rounded-xl text-sm font-bold bg-cyan-600 text-white cursor-pointer`}
+                                >
+                                    {action.actionName} - <span className="text-yellow-400 font-bold">{action.actionCost} PR</span>
+                                </button>
+                            ))
+                        }
+                    </div>
+                }
+                {
+                    actions.research && <div className={`absolute bottom-20 left-6 p-4 rounded-2xl flex flex-col gap-2 border border-slate-700 shadow-2xl transition-all bg-slate-900/80 backdrop-blur-md ${showResearchActions ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
                     {
-                        ACTIONS.healthcare.map((action: Action) => (
+                        actions.research.map((action: Action) => (
                             <button
                                 key={action.actionId}
                                 onClick={() => onAction(action, null)}
@@ -80,9 +117,11 @@ const PlayerConsole: React.FC<PlayerConsoleProps> = ({ onAction, onEndTurn, acti
                         ))
                     }
                 </div>
-                <div className={`absolute bottom-20 left-6 p-4 rounded-2xl flex flex-col gap-2 border border-slate-700 shadow-2xl transition-all bg-slate-900/80 backdrop-blur-md ${showMilitaryActions ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
+                }
+                {
+                    actions.economy && <div className={`absolute bottom-20 left-6 p-4 rounded-2xl flex flex-col gap-2 border border-slate-700 shadow-2xl transition-all bg-slate-900/80 backdrop-blur-md ${showEconomicActions ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
                     {
-                        ACTIONS.military.map((action: Action) => (
+                        actions.economy.map((action: Action) => (
                             <button
                                 key={action.actionId}
                                 onClick={() => onAction(action, null)}
@@ -92,33 +131,8 @@ const PlayerConsole: React.FC<PlayerConsoleProps> = ({ onAction, onEndTurn, acti
                             </button>
                         ))
                     }
-                </div>
-                <div className={`absolute bottom-20 left-6 p-4 rounded-2xl flex flex-col gap-2 border border-slate-700 shadow-2xl transition-all bg-slate-900/80 backdrop-blur-md ${showResearchActions ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
-                    {
-                        ACTIONS.research.map((action: Action) => (
-                            <button
-                                key={action.actionId}
-                                onClick={() => onAction(action, null)}
-                                className={`px-3 py-1 rounded-xl text-sm font-bold bg-cyan-600 text-white cursor-pointer`}
-                            >
-                                {action.actionName} - <span className="text-yellow-400 font-bold">{action.actionCost} PR</span>
-                            </button>
-                        ))
-                    }
-                </div>
-                <div className={`absolute bottom-20 left-6 p-4 rounded-2xl flex flex-col gap-2 border border-slate-700 shadow-2xl transition-all bg-slate-900/80 backdrop-blur-md ${showEconomicActions ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
-                    {
-                        ACTIONS.economy.map((action: Action) => (
-                            <button
-                                key={action.actionId}
-                                onClick={() => onAction(action, null)}
-                                className={`px-3 py-1 rounded-xl text-sm font-bold bg-cyan-600 text-white cursor-pointer`}
-                            >
-                                {action.actionName} - <span className="text-yellow-400 font-bold">{action.actionCost} PR</span>
-                            </button>
-                        ))
-                    }
-                </div>
+                    </div>
+                }
 
                 {/* Bottone Fine Turno */}
                 <button 

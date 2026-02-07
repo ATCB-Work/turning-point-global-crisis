@@ -49,7 +49,26 @@
             "actionCost": 30,
             "type": "ECONOMIC_STIMULUS"
         }
+    ],
+    "virus": [
+        { 
+            "actionId": "V1", 
+            "actionName": "Aumenta tramissione via terra", 
+            "actionCost": 2,
+            "type": "INCREASE_LAND_TRANSMISSION"
+        },
+        { 
+            "actionId": "V2", 
+            "actionName": "Aumenta tramissione via mare", 
+            "actionCost": 2,
+            "type": "INCREASE_SEA_TRANSMISSION"
+        },
+        { 
+            "actionId": "V3", 
+            "actionName": "Aumenta tramissione via aria", 
+            "actionCost": 2,
+            "type": "INCREASE_AIR_TRANSMISSION"
+        }
     ]
-
     
 }

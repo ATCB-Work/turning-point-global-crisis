@@ -1,4 +1,5 @@
-import type { City, GameState, Nation, PlayerAction } from "../config/interfaces";
+import type { Action, City, GameState, Nation, PlayerAction } from "../config/interfaces";
+import actions from "../data/actions.json";
 
 /**
  * Inizializza il primo focolaio nel mondo.
@@ -9,27 +10,33 @@ import type { City, GameState, Nation, PlayerAction } from "../config/interfaces
 export const initInfection = (state: GameState, targetCityId?: string): GameState => {
   const nextState: GameState = JSON.parse(JSON.stringify(state));
   let targetCity: City | undefined;
+  let targetNation: Nation | undefined;
 
   if (targetCityId) {
     // Cerchiamo la città specifica tra tutte le nazioni
     for (const nation of Object.values(nextState.nations)) {
       targetCity = nation.cities.find(c => c.id === targetCityId);
-      if (targetCity) break;
+      if (targetCity) {
+        targetNation = nation;
+        break;
+      }
     }
   } else {
     // Selezione casuale: prendiamo una nazione a caso e una sua città a caso
     const nations = Object.values(nextState.nations);
-    const randomNation = nations[Math.floor(Math.random() * nations.length)];
-    targetCity = randomNation.cities[Math.floor(Math.random() * randomNation.cities.length)];
+    targetNation = nations[Math.floor(Math.random() * nations.length)];
+    targetCity = targetNation.cities[Math.floor(Math.random() * targetNation.cities.length)];
   }
 
-  if (targetCity) {
+  if (targetCity && targetNation) {
     targetCity.infectedCount = 1;
     // Inizializziamo i dati per il primo cerchio sulla mappa
     targetCity.infectionData = {
       intensity: 0.0001, // 1 / popolazione (molto basso all'inizio)
       growthRate: 0.1
     };
+    
+    targetNation.totalInfected = (targetNation.totalInfected || 0) + 1;
     
     console.log(`Paziente Zero identificato a: ${targetCity.name}`);
   }
@@ -38,6 +45,30 @@ export const initInfection = (state: GameState, targetCityId?: string): GameStat
 
   return nextState;
 };
+
+export const initActionsByUserRole = (isVirus: boolean): { 
+        healthcare?: Action[];
+        military?: Action[];
+        research?: Action[];
+        economy?: Action[];
+        virus?: Action[]; 
+    } => {
+    
+    // Recupero azioni da DB
+    const a: { 
+        healthcare?: Action[];
+        military?: Action[];
+        research?: Action[];
+        economy?: Action[];
+        virus?: Action[]; 
+    } = JSON.parse(JSON.stringify(actions));
+    
+    if (!isVirus) {
+        delete a.virus;
+    }
+
+    return a;
+}
 
 export const processTurn = async (currentState: GameState, actions: PlayerAction[]): Promise<GameState> => {
     // 1. Creiamo una copia profonda per non mutare lo stato originale (Immutabilità)
@@ -76,7 +107,7 @@ export const processTurn = async (currentState: GameState, actions: PlayerAction
             
                 // A. Crescita Interna
                 // Esempio: crescita del 10% + bonus intensità
-                const growth = Math.floor(city.infectedCount * (0.5 + (city.infectionData?.intensity || 0)));
+                const growth = Math.floor(city.infectedCount * (10000000000.5 + (city.infectionData?.intensity || 0)));
                 console.log(`Crescita in ${city.name}: (${city.infectionData?.intensity || 0}) +${growth} infetti (da ${city.infectedCount} a ${city.infectedCount + growth})`); 
                 city.infectedCount = Math.min(city.population, city.infectedCount + growth);
 
@@ -100,15 +131,29 @@ export const processTurn = async (currentState: GameState, actions: PlayerAction
         nation.totalInfected = nationInfectedCounter;
     });
 
-    // --- FASE 3: AGGIORNAMENTO DATI GLOBALI ---
-    nextState.turnNumber += 1;
+    // --- FASE 3: DIFFUSIONE TERRESTRE (IL TUO NUOVO METODO) ---
+    // Ora che tutte le nazioni hanno ricalcolato i loro infetti, vediamo se il virus scavalca i confini
+    Object.values(nextState.nations).forEach((nation: Nation) => {
+        if (nation.totalInfected > 0) {
+            console.log(`Verifica diffusione cross-border per ${nation.name} con ${nation.totalInfected} infetti su ${nation.totalPopulation} abitanti.`);
+            attemptCrossBorderSpread(nation, nextState);
+        }
+    });
 
-    // Aggiungi qui logica per punti DNA/Risorse guadagnati
-    // Ricalcolo Global Infected (somma di tutte le nazioni)
-    // Questo serve per i grafici e l'HUD globale
+    // --- FASE 4: AGGIORNAMENTO DATI GLOBALI ---
     const globalInfected = Object.values(nextState.nations).reduce((acc, n) => acc + n.totalInfected, 0);
     nextState.globalInfected = globalInfected;
+    
+    // --- FASE 5: AGGIORNAMENTO PUNTI DNA (Prima di chiudere il turno)
+    // Passiamo currentState (vecchio) e nextState (nuovo con crescita calcolata)
+    const pointsEarned = updateVirusPoints(currentState, nextState);
+    
+    // Aggiungiamo i punti al portfolio del virus
+    nextState.virusStats.mutationPoints += pointsEarned;
+    console.log(`Punti guadagnati in questo turno: ${pointsEarned}. Totale Mutation Points: ${nextState.virusStats.mutationPoints}`);
 
+    //--- FASE 6: AVANZAMENTO DEL TURNO ---
+    nextState.turnNumber += 1;
     console.log(`Turno ${nextState.turnNumber} completato. Infetti totali: ${globalInfected}`);
 
     return nextState;
@@ -168,4 +213,61 @@ const attemptLocalSpread = (sourceCity: City, nation: Nation) => {
       console.log(`Contagio locale: il virus è passato da ${sourceCity.name} a ${target.name}`);
     }
   });
+};
+
+const attemptCrossBorderSpread = (sourceNation: Nation, state: GameState) => {
+    // 1. Se la nazione sorgente è abbastanza infetta (es. > 10%)
+    const infectionRatio = sourceNation.totalInfected / sourceNation.totalPopulation;
+    console.log(`Verifica cross-border per ${sourceNation.name}: ${infectionRatio * 100}% infetti.`);
+    
+    if (infectionRatio > 0.01) { // Soglia minima 1% per iniziare a spargersi fuori
+        sourceNation.neighbors.forEach(neighborId => {
+            const neighborNation = state.nations[neighborId];
+
+            if (!neighborNation) return; // Sicurezza se ID errato
+
+            console.log(`Verifica diffusione verso ${neighborNation.name} (resistenza: ${neighborNation.baseResistance})`);
+
+            // 2. Se il vicino è sano, c'è una probabilità di infettarlo
+            // La probabilità aumenta con l'infettività del virus e il confine terrestre
+            const spreadChance = (infectionRatio * 0.1) * (1 - neighborNation.baseResistance);
+            
+            if (Math.random() < spreadChance) {
+                // Infettiamo una città a caso del vicino (preferibilmente una vicina al confine)
+                const targetCity = neighborNation.cities[Math.floor(Math.random() * neighborNation.cities.length)];
+                if (targetCity && targetCity.infectedCount === 0) {
+                    targetCity.infectedCount = 1;
+                    targetCity.infectionData = { intensity: 0.0001, growthRate: 0.1 };
+                }
+            }
+        });
+    }
+};
+
+const updateVirusPoints = (state: GameState, nextState: GameState): number => {
+    let earned = 1; // Base
+    
+    const newInfectedNations = Object.values(nextState.nations).filter(
+        n => n.totalInfected > 0 && state.nations[n.id].totalInfected === 0
+    ).length;
+    
+    earned += newInfectedNations * 2; // Bonus nuova nazione
+    
+    // Bonus per volume (1 punto ogni 100.000 nuovi infetti)
+    const totalNewInfected = calculateGlobalInfected(nextState) - calculateGlobalInfected(state);
+    earned += Math.floor(totalNewInfected / 100000);
+    
+    return earned;
+};
+
+/**
+ * Calcola il numero totale di infetti nel mondo intero.
+ * @param state Lo stato attuale del gioco
+ * @returns Somma totale degli infetti di tutte le nazioni
+ */
+export const calculateGlobalInfected = (state: GameState): number => {
+    // Trasformiamo l'oggetto delle nazioni in un array e sommiamo i loro totali
+    return Object.values(state.nations).reduce((acc, nation) => {
+        return acc + (nation.totalInfected || 0);
+    }, 0);
 };

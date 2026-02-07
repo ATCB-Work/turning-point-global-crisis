@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import GameScreen from './components/GameScreen';
 import type { Nation, User } from './config/interfaces';
 import nationsData from "./data/nations.json";
@@ -12,10 +12,20 @@ function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('LOGIN');
   const [user, setUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [playerNation, setPlayerNation] = useState<Nation | null>(null);
- 
+  const [playerNation, setPlayerNation] = useState<Nation | null>({
+    id: '',
+    name: '',
+    totalPopulation: 0,
+    cities: [],
+    neighbors: [],
+    climate: 'temperate',
+    totalInfected: 0,
+    baseResistance: 0.5
+  });
+  const [virusName, setVirusName] = useState('');
+  
   // Carichiamo le nazioni una volta all'avvio
-  const nations = useMemo(() => {
+  const [nations, setNations] = useState(() => {
     return Object.fromEntries(
       Object.entries(nationsData).map(([key, value]) => [
         key,
@@ -31,25 +41,71 @@ function App() {
         },
       ])
     );
-  }, []);
+  });
 
   // Filtro intelligente: memorizzato per performance
   const filteredNations = useMemo(() => {
-    return Object.values(nations).filter(n => 
-      n.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    return Object.values(nations)
+      .filter(n => n.name.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [nations, searchTerm]);
-
+  
   const handleLogin = () => {
     // Simuliamo il caricamento dal JSON
     setUser(userData);
+    setPlayerNation(prev => prev ? ({
+      ...prev,
+      player: {
+        id: userData.id ?? '',
+        username: userData.username ?? '',
+        email: userData.email ?? '',
+        stats: userData.stats ?? {
+          gamesPlayed: 0,
+          virusesDefeated: 0,
+          humanityDefeated: 0,
+        },
+        hasSavedGame: userData?.hasSavedGame ?? false,
+        isVirus: undefined, // Lo sceglierà nella schermata di selezione
+      }
+    }) : null);
     setCurrentScreen('MENU');
   };
 
-  const startNewGame = (nation: Nation) => {
-    setPlayerNation(nation);
+  const handleSelectNation = useCallback((nation: Nation) => {
+    setPlayerNation((prev) => {
+      const updatedNation = {
+        ...prev,
+        ...nation,
+      };
+
+      return updatedNation;
+    });
+  }, []);
+
+  const handleRole = useCallback((role: 'player' | 'virus') => {
+    setPlayerNation(prev => prev && prev.player ? ({
+      ...prev,
+      player: {
+        ...prev.player,
+        isVirus: role === 'virus',
+      }
+
+    }) : null);
+  }, []);
+  
+  const startNewGame = () => {
+
+    console.log("Starting new game with nation:", playerNation);
+
+    if (!playerNation) return;
+
+    setNations(prev => {
+      return {
+        ...prev,
+        [playerNation.id]: playerNation
+      }
+    })
     setCurrentScreen('GAME');
-  };
+  }
 
   return (
     <div className="flex flex-col w-screen h-screen bg-slate-950 text-slate-100 overflow-hidden font-sans">
@@ -103,8 +159,9 @@ function App() {
             {filteredNations.map(nation => (
               <div 
                 key={nation.id}
-                onClick={() => startNewGame(nation)}
-                className="bg-slate-900 p-4 rounded-xl border-2 border-transparent hover:border-blue-500 cursor-pointer transition-all flex flex-col items-center text-center"
+                id={`nation-${nation.id}`}
+                onClick={() => handleSelectNation(nation)}
+                className={`bg-slate-900 p-4 rounded-xl border-2 hover:border-blue-500 ${playerNation?.id === nation.id ? 'border-blue-500' : 'border-transparent'} cursor-pointer transition-all flex flex-col items-center text-center `}
               >
                 {/* Placeholder per la bandiera */}
                 <div className="w-16 h-10 bg-slate-800 rounded mb-2 flex items-center justify-center text-xs text-slate-500 font-bold">
@@ -115,12 +172,58 @@ function App() {
               </div>
             ))}
           </div>
+
+          
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-3xl font-bold">Scegli il tuo ruolo</h2>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div 
+              key="player"
+              onClick={() => handleRole('player')}
+              data-value={playerNation?.player?.isVirus}
+              className={`bg-slate-900 p-4 rounded-xl border-2 ${playerNation?.player?.isVirus !== undefined && !playerNation?.player?.isVirus ? 'border-blue-500' : 'border-transparent'} hover:border-blue-500 cursor-pointer transition-all flex flex-col items-center text-center`}
+            >
+              <span className="font-medium">Leader Nazione</span>
+            </div>
+            <div 
+              key="virus"
+              onClick={() => handleRole('virus')}
+              className={`bg-slate-900 p-4 rounded-xl border-2 ${playerNation?.player?.isVirus && playerNation?.player?.isVirus ? 'border-blue-500' : 'border-transparent'} hover:border-blue-500 cursor-pointer transition-all flex flex-col items-center text-center `}
+            >
+              <span className="font-medium">Virus</span>
+            </div>
+          </div>
+          
+          <div className={`flex justify-between items-center mb-8 ${playerNation?.player?.isVirus ? 'opacity-100' : 'opacity-0 pointer-events-none'} transition-all`}>
+            <h2 className="text-3xl font-bold">Scegli il nome del virus</h2>
+          </div>
+
+          <div className={`grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 ${playerNation?.player?.isVirus ? 'opacity-100' : 'opacity-0 pointer-events-none'} transition-all`}>
+            <input
+              type='text' 
+              placeholder="Nome del virus..." 
+              className="bg-slate-800 border border-slate-700 p-2 rounded w-full focus:outline-none focus:border-blue-500" 
+              value={virusName}
+              onChange={(e) => setVirusName(e.target.value)}
+            />
+          </div>
+
+          <div className="flex justify-between items-center mb-8">
+            <button 
+              onClick={startNewGame}
+              className="px-8 py-3 bg-blue-600 hover:bg-blue-500 rounded font-bold transition-all"
+            >
+              AVVIA PARTITA
+            </button>
+          </div>
         </div>
       )}
 
       {/* 4. IL GIOCO (La tua Mappa) */}
       {currentScreen === 'GAME' && playerNation && user && (
-        <GameScreen user={user} playerNation={playerNation} nations={nations} goToMenu={() => setCurrentScreen('MENU')} />
+        <GameScreen virusName={virusName} user={user} playerNation={playerNation} nations={nations} goToMenu={() => setCurrentScreen('MENU')} />
       )}
     </div>
   );

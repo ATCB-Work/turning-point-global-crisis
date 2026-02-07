@@ -1,9 +1,9 @@
-import { useEffect, useReducer, useState } from "react";
+import { useEffect, useReducer, useState, useCallback, useMemo } from "react";
 import { Header } from "./Header";
 import MainMap from "./Map/MainMap";
 import { Footer } from "./Footer";
 import type { Nation, User, GameState, PlayerAction, Action } from "../config/interfaces";
-import { initInfection, processTurn } from "../hooks/gameEngine";
+import { initActionsByUserRole, initInfection, processTurn } from "../hooks/gameEngine";
 
 // Added types for reducer and components
 interface LayerAction {
@@ -15,35 +15,35 @@ function layersReducer(
   state: Record<string, boolean>,
   action: LayerAction
 ): Record<string, boolean> {
-  switch (action.type) {
-    case "TOGGLE_LAYER":
-      return {
-        ...state,
-        [action.layer]: !state[action.layer],
-      };
-    default:
-      return state;
+  if (action.type === "TOGGLE_LAYER") {
+    return { ...state, [action.layer]: !state[action.layer] };
   }
+  return state;
 }
 
-function createInitialState(nations: Record<string, Nation>): GameState {
+function createInitialState(virusName: string, nations: Record<string, Nation>): GameState {
   return {
     turnNumber: 1,
     nations: nations,
     globalInfected: 0,
     virusStats: {
-      name: "Unknown Virus",
-      mutationPoints: 0,
-      transmissionAir: 0,
-      transmissionWater: 0,
-      transmissionLand: 0,
-      symptoms: [],
-      abilities: [],
+        name: virusName || "Unknown Virus",
+        mutationPoints: 10,
+        infectivity: 0,
+        lethality: 0,
+        resistance: 0,
+        transmission: {
+            air: 0,
+            water: 0,
+            land: 0,
+        },
+        symptoms: [],
+        abilities: [],
     },
   };
 }
 
-function GameScreen({ user, playerNation, nations, goToMenu }: { user: User, playerNation: Nation, nations: Record<string, Nation>, goToMenu: () => void }) {
+function GameScreen({ virusName, user, playerNation, nations, goToMenu }: { virusName: string, user: User, playerNation: Nation, nations: Record<string, Nation>, goToMenu: () => void }) {
     // Carichiamo tutte le nazioni nello stato del gioco
 
     const [currentDate, setCurrentDate] = useState<Date>(new Date("01 Jan 2020"));
@@ -52,17 +52,33 @@ function GameScreen({ user, playerNation, nations, goToMenu }: { user: User, pla
         locations: true,
         infections: true,
     });
-
+    
     const [selectedNationId, setSelectedNationId] = useState<string | null>(null);
-
+    
     // Simuliamo un budget globale per il giocatore (o prendiamolo dalla nazione selezionata)
     const [globalResources] = useState(500);
 
     // 1. Inserimento nel componente che gestisce lo stato del gioco
     const [gameState, setGameState] = useState<GameState>(() => {
-        const initialState = createInitialState(nations);
+        const initialState = createInitialState(virusName, nations);
         return initInfection(initialState);
     });
+
+    const [actions] = useState<{
+        healthcare?: Action[];
+        military?: Action[];
+        research?: Action[];
+        economy?: Action[];
+        virus?: Action[];
+    }>(
+        () => {
+            if (!playerNation.player) {
+                console.error("Player data missing in playerNation");
+                return {}
+            }
+            return initActionsByUserRole(playerNation.player?.isVirus ?? false);
+        }
+    );
     const [pendingActions, setPendingActions] = useState<PlayerAction[]>([]);
     const [hasFinishedTurn, setHasFinishedTurn] = useState(false);
     const allPlayersReady = true; // In un multiplayer reale, qui controlleresti se tutti i giocatori hanno confermato il turno
@@ -77,26 +93,20 @@ function GameScreen({ user, playerNation, nations, goToMenu }: { user: User, pla
         }
     }
 
+    // Batch state updates in triggerProcessTurn
     const triggerProcessTurn = async () => {
-        // A. Raccogliamo le azioni dell'IA (se presenti)
-        const aiActions: [] = []; //generateAIActions(gameState);
-        
-        // B. Uniamo le azioni dei player reali con quelle dell'IA
+        const aiActions: [] = []; // Placeholder for AI actions
         const allActions = [...pendingActions, ...aiActions];
 
-        // C. Eseguiamo la "magia" del Tick
         const nextState = await processTurn(gameState, allActions);
 
-        // D. Aggiorniamo lo stato globale (questo farà aggiornare mappa, cerchi e icone)
         setGameState(nextState);
-
         setCurrentDate((prev) => {
             const newDate = new Date(prev);
-            newDate.setDate(newDate.getDate() + 7); // Avanza di una settimana
+            newDate.setDate(newDate.getDate() + 7);
             return newDate;
         });
 
-        // E. Puliamo la coda delle azioni per il turno successivo
         setPendingActions([]);
         setHasFinishedTurn(false);
     };
@@ -113,8 +123,7 @@ function GameScreen({ user, playerNation, nations, goToMenu }: { user: User, pla
         // Pulizia del listener quando il componente viene smontato
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, []);
-
-
+    
     const handleAction = (action: Action, payload: PlayerAction["payload"] | null) => {
         const newAction: PlayerAction = {
             playerId: user.id,
@@ -129,18 +138,21 @@ function GameScreen({ user, playerNation, nations, goToMenu }: { user: User, pla
         setPendingActions(prev => [...prev, newAction]);
     }
 
-    const handleLayerToggle = (layer: "cities" | "locations" | "infections") => {
-    dispatch({ type: "TOGGLE_LAYER", layer });
-    };
+    // Memoize handleLayerToggle to prevent unnecessary re-renders
+    const handleLayerToggle = useCallback((layer: "cities" | "locations" | "infections") => {
+        dispatch({ type: "TOGGLE_LAYER", layer });
+    }, []);
 
-    const handleNationClick = (id: string | null) => {
-        // Se clicco la nazione già selezionata, deseleziona. Altrimenti seleziona la nuova.
+    // Memoize handleNationClick to avoid re-renders
+    const handleNationClick = useCallback((id: string | null) => {
         setSelectedNationId((prevId) => (prevId === id ? null : id));
-    };
+    }, []);
 
-    // Recuperiamo i dati della nazione selezionata
-    const selectedNation = selectedNationId ? nations[selectedNationId] : null;
-
+    // Add memoization for selectedNation to avoid recalculations
+    const selectedNation = useMemo(() => {
+        return selectedNationId ? gameState.nations[selectedNationId] : null;
+    }, [selectedNationId, gameState.nations]);
+    
     return (
         <div className="flex flex-col w-screen h-screen bg-slate-950 text-slate-100 overflow-hidden font-sans">
             <Header playerNation={playerNation} globalResources={globalResources} currentDate={currentDate} goToMenu={goToMenu} />
@@ -149,7 +161,7 @@ function GameScreen({ user, playerNation, nations, goToMenu }: { user: User, pla
             <main className={`flex-1 relative flex overflow-hidden p-4 ${selectedNationId ? "gap-4" : "gap-0"} transition-all duration-500`}>
                 {/* La Board della Mappa */}
                 <section className="flex-1 relative rounded-xl bg-black/20 border border-slate-800/50 shadow-2xl">
-                    <MainMap
+                    <MainMap 
                         nations={gameState.nations}
                         playerNation={playerNation}
                         selectedNationId={selectedNationId}
@@ -183,9 +195,9 @@ function GameScreen({ user, playerNation, nations, goToMenu }: { user: User, pla
                             </div>
                             <hr className="my-4 border-slate-700" />
                                 <div className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
-                                    Status:{" "}
+                                    Gestita da:&nbsp;
                                     { 
-                                        selectedNation.isNPC ? "NPC AGENT ACTIVE" : "LOCAL PLAYER"
+                                        selectedNation.player?.id ? selectedNation.player.username : "NPC AGENT ACTIVE"
                                     }
                                 </div>
                             </div>
@@ -199,6 +211,7 @@ function GameScreen({ user, playerNation, nations, goToMenu }: { user: User, pla
             </main>
 
             <Footer
+                actions={actions}
                 activeLayers={activeLayers}
                 onAction={handleAction}
                 onEndTurn={handleConfirmTurn}
