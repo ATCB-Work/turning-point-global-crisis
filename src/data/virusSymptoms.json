@@ -1,0 +1,37 @@
+[
+  {
+    "id": "symp_rash",
+    "name": "Eruzione Cutanea",
+    "description": "Piccole irritazioni che aumentano la probabilità di contagio per contatto.",
+    "mutationPointCost": 8,
+    "effects": {
+      "infectivity": 10,
+      "transmissionContact": 5,
+      "stealth": -2
+    }
+  },
+  {
+    "id": "symp_fever",
+    "name": "Febbre",
+    "description": "Aumenta l'infettività ma rende il virus molto più facile da individuare.",
+    "mutationPointCost": 12,
+    "unlockRequirements": [{ "idPreviousMutation": "symp_rash" }],
+    "effects": {
+      "infectivity": 20,
+      "stealth": -15,
+      "lethality": 2
+    }
+  },
+  {
+    "id": "symp_organ_fail",
+    "name": "Insufficienza Multiorgano",
+    "description": "Il virus attacca i centri vitali. Letalità estrema.",
+    "mutationPointCost": 60,
+    "unlockRequirements": [{ "idPreviousMutation": "symp_fever" }],
+    "effects": {
+      "lethality": 50,
+      "stealth": -40,
+      "stabilityImpact": 10
+    }
+  }
+]

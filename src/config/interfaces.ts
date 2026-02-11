@@ -58,6 +58,7 @@ export interface City {
     name: string;
     population: number;
     infectedCount: number;
+    deathsCount: number;
     hasAirport: boolean;
     hasPort: boolean;
     isAirportOpen: boolean;
@@ -87,9 +88,38 @@ export interface City {
 export interface Nation {
     id: string; // ISO_A3 (es. "ITA")
     name: string;
-    totalPopulation: number;
-    totalInfected: number;
     baseResistance: number; // 0.1 - 1.0 (Sanità, clima, ecc.)
+
+    // --- PILASTRI GESTIONALI (Risorse) ---
+    resources: {
+        money: number;        // Budget per azioni e ricerca
+        stability: number;    // Salute politica (0 = Anarchia)
+        healthcare: number;   // Efficacia ospedaliera e prevenzione
+    };
+
+    // --- DEMOGRAFIA REALE (Verità assoluta) ---
+    stats: {
+        population: number;
+        infected: number;
+        dead: number;
+        recovered: number;
+    };
+
+    // --- FOG OF WAR (Quello che il mondo vede) ---
+    publicReport: {
+        declaredInfected: number; // Può essere falsificato dal Virus
+        declaredDead: number;     // Può essere falsificato dal Virus
+        alertLevel: 'Green' | 'Yellow' | 'Orange' | 'Red';
+    };
+
+    // --- MODIFICATORI DI STATO ---
+    policies: {
+        airBlock: boolean;
+        seaBlock: boolean;
+        bordersClosed: boolean;
+        lockdownActive: boolean;
+    };
+
     cities: City[];
     neighbors: string[]; // ID delle nazioni confinanti via terra
     climate: 'cold' | 'hot' | 'temperate';
@@ -108,6 +138,7 @@ export interface GameState {
     nations: Record<string, Nation>;
     globalInfected: number;
     virusStats: VirusStats;
+    vaccineProgress: number; // 0 - 100%
 }
 
 export interface LocationMarker {
@@ -119,7 +150,8 @@ export interface LocationMarker {
 
 export interface HeaderProps {
     playerNation: Nation;
-    globalResources: number;
+    vaccineProgress: number;
+    mutationPoints: number;
     currentDate: Date;
     goToMenu: () => void;
 }
@@ -150,18 +182,59 @@ export interface Action {
 }
 
 export interface VirusStats {
+    id?: string;
     name: string;
-    mutationPoints: number;     // Valori numerici per i calcoli di processTurn
-    infectivity: number;        // Capacità di diffondersi (0-100)
-    lethality: number;          // Capacità di uccidere (0-100)
-    resistance: number;         // Resistenza alle cure/climi (0-100)
+    mutationPoints: number;     // Punti a disposizione per evolvere il virus
     
-    // Tratti acquisiti
+    // --- CARATTERISTICHE PRINCIPALI (Derivate dalle mutazioni) ---
+    attributes: {
+        infectivity: number;   // R0 base
+        lethality: number;     // Tasso di mortalità
+        stealth: number;       // Capacità di nascondersi
+        adaptability: number;   // Velocità di mutazione
+        hotEnvironmentalResistance: number; // Resistenza a climi estremi
+        coldEnvironmentalResistance: number; // Resistenza a climi estremi
+    };
+    
+    // --- MODIFICATORI DI TRASMISSIONE ---
     transmission: {
         air: number;
-        water: number;
-        land: number;
+        contact: number;      
+        environmental: number;
+        special: number;      
     };
-    symptoms: string[];
-    abilities: string[];
+    unlockedMutations: string[]; // Lista di ID delle mutazioni sbloccate
+}
+
+export interface PlayerVirusAction extends VirusMutation {
+    playerId: string;
+    nationId: string;
+    payload?: {
+        cityId?: string; // Per azioni che targettano una città specifica
+        nationId?: string; // Per azioni che coinvolgono altre nazioni
+    }
+}
+
+export interface VirusMutation {
+    id: string;
+    name: string;
+    description: string;
+    mutationPointCost: number;
+    unlockRequirements?: {
+        idPreviousMutation: string; // Per creare catene di mutazioni
+    }[],
+    effects: {
+        // Bonus agli attributi
+        infectivity?: number;
+        lethality?: number;
+        stealth?: number;
+        adaptability?: number;
+        hotEnvironmentalResistance?: number;
+        coldEnvironmentalResistance?: number;
+        // Bonus ai vettori di trasmissione
+        transmissionAir?: number;
+        transmissionContact?: number;
+        transmissionEnv?: number;
+        transmissionSpecial?: number;
+    };
 }

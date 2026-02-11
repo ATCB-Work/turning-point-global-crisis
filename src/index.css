@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
-@theme {
+/* @theme { */
   /* Qui aggiungeremo i tuoi colori personalizzati, es: */
-  --color-cyber-blue: #0ea5e9;
-  --color-map-bg: #0f172a;
-}
+  /* --color-cyber-blue: #0ea5e9; */
+  /* --color-map-bg: #0f172a; */
+/* } */
 
 body {
   margin: 0;
@@ -14,7 +14,7 @@ body {
 }
 
 /* Impedisce la selezione del testo durante il dragging */
-.map-container {
+header, footer, .map-container {
   user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;

@@ -1,0 +1,43 @@
+[
+  {
+    "id": "air_1",
+    "name": "Emissione Goccioline",
+    "description": "Il virus viaggia tramite goccioline pesanti (tosse). Aumenta il contagio urbano.",
+    "mutationPointCost": 10,
+    "effects": {
+      "infectivity": 5,
+      "transmissionAir": 10
+    }
+  },
+  {
+    "id": "air_2",
+    "name": "Aerosol Avanzato",
+    "description": "Il virus rimane sospeso nell'aria. Facilita enormemente lo spostamento tramite aerei.",
+    "mutationPointCost": 25,
+    "unlockRequirements": [{ "idPreviousMutation": "air_1" }],
+    "effects": {
+      "infectivity": 15,
+      "transmissionAir": 30,
+      "stealth": -5
+    }
+  },
+  {
+    "id": "stealth_1",
+    "name": "Mimetismo Sintomatico",
+    "description": "I sintomi lievi vengono confusi con allergie stagionali.",
+    "mutationPointCost": 15,
+    "effects": {
+      "stealth": 20,
+      "infectivity": 2
+    }
+  },
+  {
+    "id": "env_cold_1",
+    "name": "Rivestimento Lipidico",
+    "description": "Protegge il virus dal freddo, permettendo la diffusione in nazioni con clima cold.",
+    "mutationPointCost": 15,
+    "effects": {
+      "coldEnvironmentalResistance": 40
+    }
+  }
+]

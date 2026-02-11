@@ -15,36 +15,60 @@ function App() {
   const [playerNation, setPlayerNation] = useState<Nation | null>({
     id: '',
     name: '',
-    totalPopulation: 0,
+    stats: {
+      infected: 0,
+      dead: 0,
+      recovered: 0,
+      population: 0,
+    },
+    resources: {
+      money: 0,
+      stability: 0,
+      healthcare: 0,
+    },
+    policies: {
+      airBlock: false,
+      seaBlock: false,
+      bordersClosed: false,
+      lockdownActive: false,
+    },
+    publicReport: {
+      declaredInfected: 0,
+      declaredDead: 0,
+      alertLevel: 'Green',
+    },
     cities: [],
     neighbors: [],
     climate: 'temperate',
-    totalInfected: 0,
     baseResistance: 0.5
   });
   const [virusName, setVirusName] = useState('');
   
   // Carichiamo le nazioni una volta all'avvio
-  const [nations, setNations] = useState(() => {
+  const [nations, setNations] = useState<Record<string, Nation>>(() => {
     return Object.fromEntries(
       Object.entries(nationsData).map(([key, value]) => [
         key,
-        {
+        { 
           ...value,
-          climate: value.climate as 'temperate' | 'cold' | 'hot',
-          cities: value.cities.map((city) => ({
-            ...city,
-            coordinates: city.coordinates.length === 2
-              ? ([city.coordinates[0], city.coordinates[1]] as [number, number])
-              : ([0, 0] as [number, number]),
-          })),
-        },
+          publicReport: {
+            ...value.publicReport,
+            alertLevel: (
+              value.publicReport.alertLevel === 'Green' ||
+              value.publicReport.alertLevel === 'Yellow' ||
+              value.publicReport.alertLevel === 'Orange' ||
+              value.publicReport.alertLevel === 'Red'
+            )
+              ? value.publicReport.alertLevel as "Green" | "Yellow" | "Orange" | "Red"
+              : "Green"
+          }
+        } as Nation,
       ])
     );
   });
 
   // Filtro intelligente: memorizzato per performance
-  const filteredNations = useMemo(() => {
+  const filteredNations = useMemo<Nation[]>(() => {
     return Object.values(nations)
       .filter(n => n.name.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [nations, searchTerm]);
@@ -101,7 +125,9 @@ function App() {
     setNations(prev => {
       return {
         ...prev,
-        [playerNation.id]: playerNation
+        [playerNation.id]: {
+          ...playerNation
+        }
       }
     })
     setCurrentScreen('GAME');
@@ -168,7 +194,7 @@ function App() {
                   {nation.id}
                 </div>
                 <span className="font-medium">{nation.name}</span>
-                <span className="text-xs text-slate-500">{nation.totalPopulation.toLocaleString()}</span>
+                <span className="text-xs text-slate-500">{nation.stats.population.toLocaleString()}</span>
               </div>
             ))}
           </div>

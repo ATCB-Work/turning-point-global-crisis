@@ -2,94 +2,93 @@
     "ITA": {
         "id": "ITA",
         "name": "Italia",
-        "totalPopulation": 60000000,
-        "totalInfected": 0,
         "baseResistance": 0.7,
         "climate": "temperate",
         "neighbors": ["FRA", "AUT", "CHE", "SVN"],
+        "resources": { "money": 2000, "stability": 100, "healthcare": 70 },
+        "stats": { "population": 60000000, "infected": 0, "dead": 0, "recovered": 0 },
+        "publicReport": { "declaredInfected": 0, "declaredDead": 0, "alertLevel": "Green" },
+        "policies": { "airBlock": false, "seaBlock": false, "bordersClosed": false, "lockdownActive": false },
         "cities": [
-            {
-                "id": "rom",
-                "name": "Roma",
-                "population": 2800000,
-                "infectedCount": 0,
-                "hasAirport": true,
-                "isAirportOpen": true,
-                "hasPort": false,
-                "isPortOpen": false,
-                "isCapital": true,
-                "coordinates": [12.4964, 41.9028]
-            }
-        ]
-    },
-    "FRA": {
-        "id": "FRA",
-        "name": "Francia",
-        "totalPopulation": 67000000,
-        "totalInfected": 0,
-        "baseResistance": 0.75,
-        "climate": "temperate",
-        "neighbors": ["ITA", "ESP", "BEL", "DEU", "CHE"],
-        "cities": [
-            {
-                "id": "par",
-                "name": "Parigi",
-                "population": 2100000,
-                "infectedCount": 0,
-                "hasAirport": true,
-                "isAirportOpen": true,
-                "hasPort": false,
-                "isPortOpen": false,
-                "isCapital": true,
-                "coordinates": [2.3522, 48.8566]
-            }
+            { "id": "rom", "name": "Roma", "population": 2800000, "infectedCount": 0, "hasAirport": true, "isAirportOpen": true, "hasPort": false, "isPortOpen": false, "isCapital": true, "coordinates": [12.4964, 41.9028] }
         ]
     },
     "USA": {
         "id": "USA",
         "name": "Stati Uniti",
-        "totalPopulation": 331000000,
-        "totalInfected": 0,
-        "baseResistance": 0.8,
+        "baseResistance": 0.7,
         "climate": "temperate",
         "neighbors": ["CAN", "MEX"],
+        "resources": { "money": 2000, "stability": 100, "healthcare": 70 },
+        "stats": { "population": 331000000, "infected": 0, "dead": 0, "recovered": 0 },
+        "publicReport": { "declaredInfected": 0, "declaredDead": 0, "alertLevel": "Green" },
+        "policies": { "airBlock": false, "seaBlock": false, "bordersClosed": false, "lockdownActive": false },
         "cities": [
-            { 
-                "id": "nyc", 
-                "name": "New York", 
-                "population": 8400000, 
-                "infectedCount": 0, 
-                "hasAirport": true, 
-                "isAirportOpen": false,
-                "hasPort": true, 
-                "isPortOpen": true,
-                "isCapital": false, 
-                "coordinates": [-74.0060, 40.7128]
-            },
-            { 
-                "id": "atl", 
-                "name": "Atlanta", 
-                "population": 500000, 
-                "infectedCount": 0, 
-                "hasAirport": true,
-                "isAirportOpen": true, 
-                "hasPort": false, 
-                "isPortOpen": false,
-                "isCapital": false,
-                "coordinates": [-84.3880, 33.7490] 
-            },
-            { 
-                "id": "lax", 
-                "name": "Los Angeles", 
-                "population": 3900000, 
-                "infectedCount": 0, 
-                "hasAirport": true, 
-                "isAirportOpen": true,
-                "hasPort": true, 
-                "isPortOpen": true,
-                "isCapital": false, 
-                "coordinates": [-118.2437, 34.0522] 
-            }
+            { "id": "was", "name": "Washington D.C.", "population": 700000, "infectedCount": 0, "hasAirport": true, "isAirportOpen": true, "hasPort": false, "isPortOpen": false, "isCapital": true, "coordinates": [-77.0369, 38.9072] },
+            { "id": "nyc", "name": "New York", "population": 8400000, "infectedCount": 0, "hasAirport": true, "isAirportOpen": true, "hasPort": true, "isPortOpen": true, "isCapital": false, "coordinates": [-74.0060, 40.7128] },
+            { "id": "sfo", "name": "San Francisco", "population": 880000, "infectedCount": 0, "hasAirport": true, "isAirportOpen": true, "hasPort": true, "isPortOpen": true, "isCapital": false, "coordinates": [-122.4194, 37.7749] },
+            { "id": "den", "name": "Denver", "population": 715000, "infectedCount": 0, "hasAirport": true, "isAirportOpen": true, "hasPort": false, "isPortOpen": false, "isCapital": false, "coordinates": [-104.9903, 39.7392] },
+            { "id": "chi", "name": "Chicago", "population": 2700000, "infectedCount": 0, "hasAirport": true, "isAirportOpen": true, "hasPort": false, "isPortOpen": false, "isCapital": false, "coordinates": [-87.6298, 41.8781] },
+            { "id": "mia", "name": "Miami", "population": 460000, "infectedCount": 0, "hasAirport": true, "isAirportOpen": true, "hasPort": true, "isPortOpen": true, "isCapital": false, "coordinates": [-80.1918, 25.7617] },
+            { "id": "hou", "name": "Houston", "population": 2300000, "infectedCount": 0, "hasAirport": true, "isAirportOpen": true, "hasPort": true, "isPortOpen": true, "isCapital": false, "coordinates": [-95.3698, 29.7604] }
+        ]
+    },
+    "GBR": {
+        "id": "GBR",
+        "name": "Regno Unito",
+        "baseResistance": 0.7,
+        "climate": "temperate",
+        "neighbors": ["IRL"],
+        "resources": { "money": 2000, "stability": 100, "healthcare": 70 },
+        "stats": { "population": 67000000, "infected": 0, "dead": 0, "recovered": 0 },
+        "publicReport": { "declaredInfected": 0, "declaredDead": 0, "alertLevel": "Green" },
+        "policies": { "airBlock": false, "seaBlock": false, "bordersClosed": false, "lockdownActive": false },
+        "cities": [
+            { "id": "lon", "name": "Londra", "population": 8900000, "infectedCount": 0, "hasAirport": true, "isAirportOpen": true, "hasPort": true, "isPortOpen": true, "isCapital": true, "coordinates": [-0.1276, 51.5074] }
+        ]
+    },
+    "BRA": {
+        "id": "BRA",
+        "name": "Brasile",
+        "baseResistance": 0.7,
+        "climate": "hot",
+        "neighbors": ["ARG", "COL", "PER", "VEN", "PRY"],
+        "resources": { "money": 2000, "stability": 100, "healthcare": 70 },
+        "stats": { "population": 212000000, "infected": 0, "dead": 0, "recovered": 0 },
+        "publicReport": { "declaredInfected": 0, "declaredDead": 0, "alertLevel": "Green" },
+        "policies": { "airBlock": false, "seaBlock": false, "bordersClosed": false, "lockdownActive": false },
+        "cities": [
+            { "id": "bsb", "name": "Brasilia", "population": 3000000, "infectedCount": 0, "hasAirport": true, "isAirportOpen": true, "hasPort": false, "isPortOpen": false, "isCapital": true, "coordinates": [-47.8825, -15.7942] },
+            { "id": "sao", "name": "San Paolo", "population": 12000000, "infectedCount": 0, "hasAirport": true, "isAirportOpen": true, "hasPort": true, "isPortOpen": true, "isCapital": false, "coordinates": [-46.6333, -23.5505] }
+        ]
+    },
+    "CHN": {
+        "id": "CHN",
+        "name": "Cina",
+        "baseResistance": 0.7,
+        "climate": "temperate",
+        "neighbors": ["RUS", "IND", "VNM", "KOR", "PRK"],
+        "resources": { "money": 2000, "stability": 100, "healthcare": 70 },
+        "stats": { "population": 1400000000, "infected": 0, "dead": 0, "recovered": 0 },
+        "publicReport": { "declaredInfected": 0, "declaredDead": 0, "alertLevel": "Green" },
+        "policies": { "airBlock": false, "seaBlock": false, "bordersClosed": false, "lockdownActive": false },
+        "cities": [
+            { "id": "pek", "name": "Pechino", "population": 21500000, "infectedCount": 0, "hasAirport": true, "isAirportOpen": true, "hasPort": false, "isPortOpen": false, "isCapital": true, "coordinates": [116.4074, 39.9042] },
+            { "id": "sha", "name": "Shanghai", "population": 24000000, "infectedCount": 0, "hasAirport": true, "isAirportOpen": true, "hasPort": true, "isPortOpen": true, "isCapital": false, "coordinates": [121.4737, 31.2304] }
+        ]
+    },
+    "JPN": {
+        "id": "JPN",
+        "name": "Giappone",
+        "baseResistance": 0.7,
+        "climate": "temperate",
+        "neighbors": [],
+        "resources": { "money": 2000, "stability": 100, "healthcare": 70 },
+        "stats": { "population": 126000000, "infected": 0, "dead": 0, "recovered": 0 },
+        "publicReport": { "declaredInfected": 0, "declaredDead": 0, "alertLevel": "Green" },
+        "policies": { "airBlock": false, "seaBlock": false, "bordersClosed": false, "lockdownActive": false },
+        "cities": [
+            { "id": "tky", "name": "Tokyo", "population": 14000000, "infectedCount": 0, "hasAirport": true, "isAirportOpen": true, "hasPort": true, "isPortOpen": true, "isCapital": true, "coordinates": [139.6503, 35.6762] }
         ]
     }
 }
